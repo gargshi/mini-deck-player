@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Mini Music Player</title>
+	<style>
+		:root {
+			--bg: #dfdfdf;
+			--panel: #ffffff;
+			--muted: #6b7280;
+			--text: #111827;
+			--accent: #2563eb;
+			--radius: 18px;
+		}
+
+		body.dark {
+			--bg: #0f172a;
+			--panel: #1e293b;
+			--muted: #94a3b8;
+			--text: #f8fafc;
+			--accent: #38bdf8;
+		}
+
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			font-family: 'Arial', system-ui, sans-serif;
+			background: var(--bg);
+			color: var(--text);
+			height: 100vh;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+		}
+
+		/* ======================== STACK ======================== */
+		main {
+			flex: 1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			perspective: 1000px;
+			overflow: hidden;
+			position: relative;
+		}
+
+		.nav-bar {
+			position: absolute;
+			top: 20px;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.nav-bar input[type="file"] {
+			display: none;
+		}
+
+		.btn {
+			border: 1px solid #d1d5db;
+			background: #e5e7eb;
+			border-radius: 8px;
+			padding: 8px 14px;
+			cursor: pointer;
+			font-weight: 600;
+		}
+
+		.btn:hover {
+			background: #dbeafe;
+		}
+
+		.stack {
+			position: relative;
+			width: 100%;
+			height: 180px;
+			transform-style: preserve-3d;
+		}
+
+		.card {
+			position: absolute;
+			width: 200px;
+			height: 300px;
+			border-radius: var(--radius);
+			background: var(--panel);
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			justify-content: top;
+			align-items: center;
+			text-align: center;
+			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+			border: 1px solid #d1d5db;
+			transition: all 1s ease;
+			cursor: pointer;
+			overflow: hidden;
+		}
+
+		.card>* {
+			position: relative;
+			z-index: 1;
+			/* ensure text stays above */
+		}
+
+		.card.cover-image {
+			background-color: gray;
+			height: 100px;
+			width: 100px;
+		}
+
+		.card .cover-image img,
+		.card .cover-image svg {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.card .name {
+			font-weight: 10;
+			font-size: 15px;
+			margin-bottom: 4px;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			padding: 5px;
+		}
+
+		.card .size {
+			font-size: 10px;
+			color: var(--muted);
+		}
+
+		.card .artist {
+			font-size: 10px;
+			color: var(--muted);
+		}
+
+		.card.active {
+			z-index: 10;
+			transform: rotateY(0deg) translateZ(10px) scale(1.05);
+			box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+			border: 2px solid var(--accent);
+		}
+
+		/* ======================== PLAYER ======================== */
+		.player {
+			position: sticky;
+			bottom: 0;
+			background: var(--panel);
+			border-top: 1px solid #e5e7eb;
+			box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.08);
+			display: grid;
+			grid-template-columns: 1fr auto 1fr;
+			align-items: center;
+			padding: 10px 20px;
+		}
+
+		.left {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.cover {
+			width: 56px;
+			height: 56px;
+			background-color: var(--muted);
+			color: var(--text);
+			border-radius: 10px;
+			display: grid;
+			place-items: center;
+			font-weight: bold;
+		}
+
+		.cover img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.info {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.title {
+			font-size: 15px;
+			font-weight: 600;
+		}
+
+		.artist {
+			font-size: 13px;
+			color: var(--muted);
+		}
+
+		.controls {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 16px;
+		}
+
+		.controls button {
+			width: 42px;
+			height: 42px;
+			/* ensures perfect circle */
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			background-color: var(--panel);
+			color: var(--text);
+
+			border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+			border-radius: 10%;
+
+			font-size: 16px;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			box-shadow: 0 2px 6px rgba(48, 49, 49, 0.681);
+		}
+
+		.controls button svg {
+			width: 21px;
+			height: 21px;
+			fill: var(--text);
+
+		}
+
+		/* hover glow and color shift */
+		.controls button:hover {
+			background-color: rgba(9, 126, 210, 0.588);
+			color: #fff;
+			box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent);
+			transform: scale(1.05);
+		}
+
+		.controls button:hover svg {
+			fill: #fff;
+		}
+
+
+		/* active press feedback */
+		.controls button:active {
+			transform: scale(0.95);
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+		}
+
+
+		.right {
+			display: flex;
+			align-items: center;
+			justify-content: flex-end;
+			gap: 10px;
+		}
+
+		input[type="range"] {
+			width: 100px;
+			accent-color: var(--accent);
+		}
+
+		audio {
+			display: none;
+		}
+
+
+		.theme-toggle {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			font-weight: 600;
+			color: var(--text);
+		}
+
+		.theme-toggle span {
+			user-select: none;
+		}
+
+		.switch {
+			position: relative;
+			display: inline-block;
+			width: 48px;
+			height: 26px;
+		}
+
+		.switch input {
+			opacity: 0;
+			width: 0;
+			height: 0;
+		}
+
+		.slider {
+			position: absolute;
+			cursor: pointer;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background-color: #ccc;
+			transition: 0.4s;
+			border-radius: 26px;
+		}
+
+		.slider:before {
+			position: absolute;
+			content: "";
+			height: 18px;
+			width: 18px;
+			left: 4px;
+			bottom: 4px;
+			background-color: white;
+			transition: 0.4s;
+			border-radius: 50%;
+		}
+
+		input:checked+.slider {
+			background-color: var(--accent);
+		}
+
+		input:checked+.slider:before {
+			transform: translateX(22px);
+		}
+
+		#addFilesbtn {
+			cursor: pointer;
+			font-weight: 2;
+			transition: all 0.3s ease;
+			border: 1px solid #d1d5db;
+			border-radius: 10px;
+			color: var(--text);
+			background: var(--panel);
+			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+		}
+
+		#addFilesbtn:hover {
+			border: 1px solid var(--accent);
+			box-shadow: 0 10px 10px rgba(9, 126, 210, 0.588);
+			background-color: var(--bg);
+			color: var(--text);
+		}
+
+		#plus {
+			width: 14px;
+			height: 14px;
+			fill: var(--text);
+		}
+
+		#no-cover-default {
+			fill: var(--text);
+		}
+
+		.marquee {
+			position: relative;
+			overflow: hidden;
+			white-space: nowrap;
+			width: 180px;
+			/* fits nicely within 200px card */
+		}
+
+		.marquee span {
+			display: inline-block;
+			padding-left: 100%;
+			animation: marquee-scroll 10s linear infinite;
+		}
+
+		@keyframes marquee-scroll {
+			0% {
+				transform: translateX(0);
+			}
+
+			100% {
+				transform: translateX(-100%);
+			}
+		}
+
+		/* Disable animation if text fits */
+		.marquee.no-scroll span {
+			animation: none;
+			transform: translateX(0);
+			padding-left: 0;
+		}
+	</style>
+</head>
+
+<body>
+
+	<main>
+		<div class="nav-bar">
+			<label for="fileInput" class="btn" id="addFilesbtn">
+				<span>
+					<svg id="plus" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" xml:space="preserve">
+						<path
+							d="M128 63.954c0 2.006-.797 3.821-2.136 5.127-1.308 1.337-3.125 2.133-5.166 2.133H71.302v49.356c0 4.012-3.284 7.292-7.302 7.292-2.009 0-3.827-.828-5.166-2.134-1.308-1.337-2.136-3.152-2.136-5.159V71.214H7.302c-4.05 0-7.302-3.248-7.302-7.26 0-2.006.797-3.853 2.136-5.159a7.279 7.279 0 0 1 5.166-2.134h49.395V7.306c0-4.012 3.284-7.26 7.302-7.26 2.009 0 3.827.828 5.166 2.133a7.238 7.238 0 0 1 2.136 5.127v49.356h49.395A7.276 7.276 0 0 1 128 63.954z" />
+					</svg>
+					Add Files
+				</span>
+			</label>
+			<input id="fileInput" type="file" accept="audio/*" multiple>
+			<div class="theme-toggle">
+				<span>Dark Mode</span>
+				<label class="switch">
+					<input type="checkbox" id="themeSwitch">
+					<span class="slider"></span>
+				</label>
+			</div>
+		</div>
+
+		<div class="stack" id="stack">
+		</div>
+	</main>
+
+	<div class="player">
+		<div class="left">
+			<div class="cover" id="cover">♪</div>
+			<div class="info">
+				<div class="title" id="title">No track playing</div>
+				<div class="artist" id="artist">—</div>
+			</div>
+		</div>
+
+		<div class="controls">
+			<button id="prevBtn">
+				<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32"
+					style="enable-background:new 0 0 32 32" xml:space="preserve">
+					<style></style>
+					<path
+						d="M20 28a1 1 0 0 1-.521-.146l-18-11a1.002 1.002 0 0 1 0-1.708l18-11A.999.999 0 0 1 21 5v6.11a1 1 0 0 1-.479.854L13.918 16l6.603 4.035c.297.182.479.506.479.854V27a1 1 0 0 1-1 1zM3.918 16 19 25.217V21.45l-7.521-4.596a1 1 0 0 1 0-1.707L19 10.55V6.783L3.918 16z" />
+					<path
+						d="M30 28a1 1 0 0 1-.521-.146l-18-11a1.002 1.002 0 0 1 0-1.708l18-11A.999.999 0 0 1 31 5v22a1 1 0 0 1-1 1zM13.918 16 29 25.217V6.783L13.918 16z" />
+				</svg>
+			</button>
+			<button id="playPauseBtn">
+				<svg version="1.1" id="play" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32"
+					xml:space="preserve">
+					<path
+						d="M7 28a.999.999 0 0 1-1-1V5a1 1 0 0 1 1.521-.854l18 11a1.001 1.001 0 0 1 0 1.708l-18 11A1 1 0 0 1 7 28zM8 6.783v18.434L23.082 16 8 6.783z" />
+				</svg>
+			</button>
+			<button id="nextBtn"><svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0"
+					viewBox="0 0 32 32" style="enable-background:new 0 0 32 32" xml:space="preserve">
+					<style></style>
+					<path
+						d="M12 28a1 1 0 0 1-1-1v-6.111c0-.348.182-.672.479-.854L18.082 16l-6.603-4.035A1.001 1.001 0 0 1 11 11.11V5a1 1 0 0 1 1.521-.854l18 11a1.002 1.002 0 0 1 0 1.708l-18 11A1 1 0 0 1 12 28zm1-6.55v3.767L28.082 16 13 6.783v3.767l7.521 4.596a1.001 1.001 0 0 1 0 1.708L13 21.45z" />
+					<path
+						d="M2 28a1 1 0 0 1-1-1V5a1 1 0 0 1 1.521-.854l18 11a1.002 1.002 0 0 1 0 1.708l-18 11A1 1 0 0 1 2 28zM3 6.783v18.434L18.082 16 3 6.783z" />
+				</svg>
+			</button>
+		</div>
+
+		<div class="right">
+			<span id="currentTime">0:00</span>
+			<input id="seek" type="range" min="0" max="1000" value="0" step="1">
+			<span id="duration">0:00</span>
+			<input id="volume" type="range" min="0" max="1" step="0.01" default="0.5">
+		</div>
+	</div>
+
+	<audio id="audio" preload="metadata"></audio>
+
+
+	<script defer>
+		const fileInput = document.getElementById("fileInput");
+		const stack = document.getElementById("stack");
+		const titleEl = document.getElementById("title");
+		const artistEl = document.getElementById("artist");
+		const coverEl = document.getElementById("cover");
+		const playPauseBtn = document.getElementById("playPauseBtn");
+		const nextBtn = document.getElementById("nextBtn");
+		const prevBtn = document.getElementById("prevBtn");
+		const audio = document.getElementById("audio");
+		const seek = document.getElementById("seek");
+		const currentTimeEl = document.getElementById("currentTime");
+		const durationEl = document.getElementById("duration");
+		const volume = document.getElementById("volume");
+
+		const default_music_svg = `<svg id="no-cover-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" xml:space="preserve"><path d="M16 28.458C9.131 28.458 3.542 22.87 3.542 16S9.131 3.542 16 3.542 28.458 9.13 28.458 16 22.869 28.458 16 28.458zm0-23.916C9.682 4.542 4.542 9.682 4.542 16S9.682 27.458 16 27.458 27.458 22.319 27.458 16 22.318 4.542 16 4.542z"/><path d="M11.583 25.185a.488.488 0 0 1-.182-.036.611.611 0 0 1-.128-.07c-3.376-1.714-5.518-5.213-5.518-9.086 0-1.616.373-3.173 1.109-4.625a.5.5 0 1 1 .893.451 9.15 9.15 0 0 0-1.002 4.174 9.209 9.209 0 0 0 5.045 8.24.506.506 0 0 1 .234.655.497.497 0 0 1-.451.297zm13.099-4.265a.5.5 0 0 1-.446-.727 9.14 9.14 0 0 0 1.008-4.186 9.21 9.21 0 0 0-5.045-8.241l.444-.896-.243.438.247-.435a10.207 10.207 0 0 1 5.597 9.135c0 1.623-.376 3.184-1.117 4.639a.498.498 0 0 1-.445.273zM16 11.963a4.037 4.037 0 1 0 0 8.074 4.037 4.037 0 0 0 0-8.074zm0 4.749a.712.712 0 1 1 0-1.425.712.712 0 0 1 0 1.425z"/></svg>`
+		const pause_svg = `<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32" xml:space="preserve"><style></style><path d="M13 28H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6H8v20zM25 28h-6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6h-4v20z"/></svg>`;
+		const play_svg = `<svg version="1.1" id="play" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32" xml:space="preserve"><path d="M7 28a.999.999 0 0 1-1-1V5a1 1 0 0 1 1.521-.854l18 11a1.001 1.001 0 0 1 0 1.708l-18 11A1 1 0 0 1 7 28zM8 6.783v18.434L23.082 16 8 6.783z"/></svg>`;
+
+		let tracks = [];
+		let index = -1;
+
+		function setTheme() {
+			const themeSwitch = document.getElementById("themeSwitch");
+
+			themeSwitch.addEventListener("change", () => {
+				document.body.classList.toggle("dark", themeSwitch.checked);
+
+				// optional: save user preference
+				localStorage.setItem("theme", themeSwitch.checked ? "dark" : "light");
+			});
+
+			// load previous preference
+			window.addEventListener("load", () => {
+				const saved = localStorage.getItem("theme");
+				if (saved === "dark") {
+					document.body.classList.add("dark");
+					themeSwitch.checked = true;
+				}
+			});
+		}
+		setTheme();
+
+
+
+		function formatTime(sec) {
+			if (!isFinite(sec)) return "0:00";
+			sec = Math.floor(sec);
+			return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+		}
+
+		async function addFiles(files) {
+			const newTracks = [];
+
+			for (const file of files) {
+				if (!file.type.startsWith("audio/")) continue;
+
+				const track = {
+					name: file.name,
+					url: URL.createObjectURL(file),
+					size: (file.size / 1024 / 1024).toFixed(1) + " MB",
+					cover: null,
+					metadata: null
+				};
+
+				// Try to extract embedded album art from metadata
+				track.cover = await extractCoverFromMP3(file);
+				track.metadata = await extractMetadataFromAudio(file);
+				console.log(track.metadata);
+				newTracks.push(track);
+			}
+
+			tracks.push(...newTracks);
+			// tracks = tracks.reverse(); // optional if you want latest on top
+
+			if (index === -1 && tracks.length > 0) loadTrack(0);
+			renderStack();
+		}
+
+		function enableMarquee(el) {
+			const span = el.querySelector("span");
+			if (!span) return;
+			el.classList.remove("no-scroll");
+			span.style.animationDuration = "10s";
+
+			// Run after browser renders element
+			requestAnimationFrame(() => {
+				if (span.scrollWidth <= el.clientWidth) {
+					el.classList.add("no-scroll");
+				}
+			});
+		}
+
+		function disableMarquee(el) {
+			const span = el.querySelector("span");
+			if (!span) return;
+			el.classList.add("no-scroll");
+			span.style.animationDuration = "0s";
+		}
+
+		function renderStack() {
+			const windowWidth = window.innerWidth;
+
+			// 1️⃣ Add missing cards (only new ones)
+			if (stack.children.length < tracks.length) {
+				for (let i = stack.children.length; i < tracks.length; i++) {
+					const t = tracks[i];
+					const card = document.createElement("div");
+					card.classList.add("card");
+
+					// cover image or default SVG
+					const coverDiv = document.createElement("div");
+					coverDiv.classList.add("cover-image");
+
+					if (t.cover && typeof t.cover === "string" && t.cover.startsWith("blob:")) {
+						const img = document.createElement("img");
+						img.src = t.cover;
+						img.onerror = () => {
+							coverDiv.innerHTML = default_music_svg;
+							coverDiv.style.display = "grid";
+							coverDiv.style.placeItems = "center";
+						};
+						coverDiv.appendChild(img);
+					} else {
+						coverDiv.innerHTML = default_music_svg;
+						coverDiv.style.display = "grid";
+						coverDiv.style.placeItems = "center";
+					}
+
+					const nameDiv = document.createElement("div");
+					nameDiv.classList.add("name", "marquee");
+					nameDiv.innerHTML = `<span>${t.name}</span>`; //t.name;
+
+					const sizeDiv = document.createElement("div");
+					sizeDiv.classList.add("size");
+					sizeDiv.textContent = t.size;
+
+					const artistDiv = document.createElement("div");
+					sizeDiv.classList.add("artist");
+					sizeDiv.textContent = t.metadata.artist;
+
+
+					card.appendChild(coverDiv);
+					card.appendChild(nameDiv);
+					card.appendChild(sizeDiv);
+					card.onclick = () => setActive(i);
+
+					// 🧠 Start from offscreen position for smooth entry
+					card.style.transform = `translateX(${windowWidth}px) rotateY(0deg)`;
+					card.style.transition = "transform 1s ease";
+
+					stack.appendChild(card);
+
+					// Small delay so CSS transition triggers naturally
+					requestAnimationFrame(() => {
+						card.style.transform = `
+							rotateY(0deg)
+							translateZ(${10 + (index - i)}px)
+							translateX(${windowWidth * 0.5 + (i - index) * 10}px)
+							scale(0.95)
+						`;
+					});
+				}
+			}
+
+			// 2️⃣ Update transforms for all cards smoothly
+			[...stack.children].forEach((card, i) => {
+				card.style.transition = "transform 1s ease";
+				if (i < index) {
+					// LEFT SIDE cards					
+					card.style.transform = `
+						rotateY(0deg)
+						translateZ(${-10 - (index - i)}px)
+						translateX(${windowWidth * 0.1 + (i - index) * 10}px)
+						scale(0.9)
+					`;
+					disableMarquee(card.querySelector(".name"));
+				}
+				else if (i === index) {
+					// CENTER (active) card					
+					card.style.transform = `
+						rotateY(0deg)
+						translateZ(60px)
+						translateX(${windowWidth * 0.45}px)
+						scale(1.05)
+					`;
+					card.style.border = "2px solid var(--accent)";
+					card.style.height = "300px";
+					enableMarquee(card.querySelector(".name"));
+				}
+				else {
+					// RIGHT SIDE cards					
+					card.style.transform = `
+							rotateY(0deg)
+							translateZ(${10 + (index - i)}px)
+							translateX(${windowWidth * 0.8 + (i - index) * 10}px)
+							scale(0.95)
+						`;
+					disableMarquee(card.querySelector(".name"));
+				}
+			});
+
+		}
+
+		function setActive(i) {
+			index = i;
+			loadTrack(i);
+			playTrack();
+		}
+
+		function loadTrack(i) {
+			const t = tracks[i];
+			audio.src = t.url;
+			audio.volume = 1 * volume.value;
+			titleEl.textContent = t.name;
+			artistEl.textContent = `Track ${i + 1} of ${tracks.length}`;
+			// show album art if it exists			
+			if (t.cover && typeof t.cover === "string" && t.cover.startsWith("blob:")) {
+				const img = document.createElement("img");
+				img.src = t.cover;
+				coverEl.innerHTML = "";
+				coverEl.style.backgroundSize = "cover";
+				coverEl.style.backgroundPosition = "center";
+				coverEl.textContent = "";
+				coverEl.appendChild(img);
+				img.onerror = () => {
+					coverEl.innerHTML = default_music_svg;
+				};
+			} else {
+				coverEl.style.backgroundImage = "none";
+				coverEl.textContent = "♪";
+				coverEl.textContent = t.name[0].toUpperCase();
+			}
+			renderStack();
+		}
+
+		function playTrack() {
+			audio.play();
+			playPauseBtn.innerHTML = pause_svg;
+		}
+
+		function pauseTrack() {
+			audio.pause();
+			playPauseBtn.innerHTML = play_svg;
+		}
+
+		function playPause() {
+			if (!tracks.length) return;
+			if (index === -1) {
+				index = 0;
+				renderStack();
+			}
+			audio.paused ? playTrack() : pauseTrack();
+		}
+
+		function nextTrack() {
+			if (!tracks.length) return;
+			index = (index + 1) % tracks.length;
+			loadTrack(index);
+			playTrack();
+		}
+
+		function prevTrack() {
+			if (!tracks.length) return;
+			index = (index - 1 + tracks.length) % tracks.length;
+			loadTrack(index);
+			playTrack();
+		}
+
+		/* EVENTS */
+		fileInput.onchange = e => addFiles(e.target.files);
+		document.ondrop = e => { e.preventDefault(); addFiles(e.dataTransfer.files); };
+		document.ondragover = e => e.preventDefault();
+
+		playPauseBtn.onclick = playPause;
+		nextBtn.onclick = nextTrack;
+		prevBtn.onclick = prevTrack;
+
+		audio.ontimeupdate = () => {
+			seek.value = (audio.currentTime / audio.duration) * 1000 || 0;
+			currentTimeEl.textContent = formatTime(audio.currentTime);
+			durationEl.textContent = formatTime(audio.duration);
+		};
+		seek.oninput = () => {
+			audio.currentTime = (seek.value / 1000) * (audio.duration || 0);
+		};
+		volume.oninput = () => { audio.volume = volume.value; };
+		audio.onended = nextTrack;
+
+		//attempt to extract cover from mp3
+		async function extractCoverFromMP3(file) {
+			const buffer = await file.arrayBuffer();
+			const view = new DataView(buffer);
+
+			// check for ID3 header
+			if (String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2)) !== "ID3") {
+				console.log("No ID3 tag found.");
+				return null;
+			}
+
+			// skip ID3 header (10 bytes)
+			let offset = 10;
+
+			while (offset < buffer.byteLength - 10) {
+				const frameID = String.fromCharCode(
+					view.getUint8(offset),
+					view.getUint8(offset + 1),
+					view.getUint8(offset + 2),
+					view.getUint8(offset + 3)
+				);
+
+				const frameSize = view.getUint32(offset + 4);
+				offset += 10; // skip frame header
+
+				if (frameID === "APIC") {
+					// read mime type (null-terminated)
+					let mime = "";
+					let i = 1; // skip text encoding byte
+					while (view.getUint8(offset + i) !== 0) {
+						mime += String.fromCharCode(view.getUint8(offset + i));
+						i++;
+					}
+					i++; // skip null terminator
+					const pictureType = view.getUint8(offset + i);
+					i++;
+					// skip description (null-terminated)
+					while (view.getUint8(offset + i) !== 0) i++;
+					i++; // skip final null terminator
+
+					const imageData = buffer.slice(offset + i, offset + frameSize);
+					const blob = new Blob([imageData], { type: mime });
+					return URL.createObjectURL(blob);
+				} else {
+					offset += frameSize; // skip non-APIC frame
+				}
+			}
+
+			console.log("No embedded image found.");
+			return null;
+		}
+
+		async function extractMetadataFromAudio(file) {
+			try {
+				const buffer = await file.arrayBuffer();
+				const view = new DataView(buffer);
+
+				// Check ID3 header
+				if (
+					String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2)) !== "ID3"
+				) {
+					console.log("No ID3 tag found.");
+					return {
+						title: file.name.replace(/\.[^/.]+$/, ""),
+						artist: "Unknown Artist",
+						album: "Unknown Album",
+						genre: "",
+						year: "",
+						cover: null,
+					};
+				}
+
+				let offset = 10; // Skip ID3 header
+				const tags = {};
+				let cover = null;
+
+				const decoderUTF16 = new TextDecoder("utf-16");
+				const decoderUTF8 = new TextDecoder("utf-8");
+				const decoderLatin1 = new TextDecoder("iso-8859-1");
+
+				while (offset + 10 <= buffer.byteLength) {
+					const frameID = String.fromCharCode(
+						view.getUint8(offset),
+						view.getUint8(offset + 1),
+						view.getUint8(offset + 2),
+						view.getUint8(offset + 3)
+					);
+					const frameSize = view.getUint32(offset + 4);
+
+					if (frameSize <= 0) break;
+					offset += 10; // Skip frame header
+
+					if (frameID === "APIC") {
+						// Embedded cover art
+						try {
+							let i = offset + 1;
+							let mime = "";
+							while (view.getUint8(i) !== 0) mime += String.fromCharCode(view.getUint8(i++));
+							i++; // skip null terminator
+							i++; // skip picture type byte
+							while (view.getUint8(i) !== 0) i++; // skip description
+							i++;
+							const imageData = buffer.slice(i, offset + frameSize);
+							const blob = new Blob([imageData], { type: mime || "image/jpeg" });
+							cover = URL.createObjectURL(blob);
+						} catch (e) {
+							console.warn("Failed to read cover:", e);
+						}
+					} else if (["TIT2", "TPE1", "TALB", "TCON", "TYER", "TDRC"].includes(frameID)) {
+						const encodingByte = view.getUint8(offset);
+						const textBytes = new Uint8Array(buffer, offset + 1, frameSize - 1);
+
+						let text = "";
+						try {
+							if (encodingByte === 1 || encodingByte === 2)
+								text = decoderUTF16.decode(textBytes);
+							else if (encodingByte === 3)
+								text = decoderUTF8.decode(textBytes);
+							else
+								text = decoderLatin1.decode(textBytes);
+						} catch (e) {
+							text = "";
+						}
+
+						text = text.replace(/\0/g, "").trim();
+						tags[frameID] = text;
+					}
+
+					offset += frameSize;
+				}
+
+				return {
+					title: tags["TIT2"] || file.name.replace(/\.[^/.]+$/, ""),
+					artist: tags["TPE1"] || "Unknown Artist",
+					album: tags["TALB"] || "Unknown Album",
+					genre: tags["TCON"] || "",
+					year: tags["TYER"] || tags["TDRC"] || "",
+					cover,
+				};
+			} catch (err) {
+				console.warn("Metadata extraction failed:", err);
+				return {
+					title: file.name.replace(/\.[^/.]+$/, ""),
+					artist: "Unknown Artist",
+					album: "Unknown Album",
+					cover: null,
+				};
+			}
+
+		}
+	</script>
+</body>
+
+</html>
