@@ -11,8 +11,9 @@
 			--panel: #ffffff;
 			--muted: #6b7280;
 			--text: #111827;
-			--accent:#38bdf8;
+			--accent: #38bdf8;
 			--radius: 18px;
+			--nav-btn-background: #e5e7eb;
 		}
 
 		body.dark {
@@ -20,7 +21,8 @@
 			--panel: #1e293b;
 			--muted: #94a3b8;
 			--text: #f8fafc;
-			--accent:  #eb7b25;
+			--accent: #eb7b25;
+			--nav-btn-background: #353535;
 		}
 
 		* {
@@ -51,17 +53,91 @@
 		}
 
 		.nav-bar {
-			position: absolute;
-			top: 20px;
-			left: 80%;
-			transform: translateX(-50%);
 			display: flex;
 			align-items: center;
-			gap: 10px;
+			justify-content: space-between;
+			background: var(--panel);
+			padding: 0.8rem 1.5rem;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+			position: sticky;
+			top: 0;
+			z-index: 10;
+			width: 100%;
+		}
+
+		.nav-bar .left-side-items {
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			color: var(--text);
+		}
+
+		.banner {
+			font-size: 1.2rem;
+			font-weight: 5;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		}
+
+		.nav-bar .right-side-items {
+			display: flex;
+			align-items: center;
+			gap: 1.2rem;
+			color: var(--text);
 		}
 
 		.nav-bar input[type="file"] {
 			display: none;
+		}
+
+		.nav-bar .btn {
+			color: var(--text);
+			background: var(--nav-btn-background);
+			border: 1px solid #d1d5db;
+			border-radius: 8px;
+			padding: 8px 14px;
+			cursor: pointer;
+			font-weight: 60;
+		}
+
+		.nav-bar .btn:hover {
+			background: #0e4a98;
+		}
+
+		.modal {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.5);
+			z-index: 100;
+			display: none;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.modal .close {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			font-size: 30px;
+			color: var(--text);
+			cursor: pointer;
+			border: 1px solid #e20000;
+		}
+
+		.modal-content {
+			background: var(--panel);
+			color: var(--text);
+			padding: 20px;
+			border-radius: 5px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+		}
+
+		.modal-open {
+			display: flex;
+			justify-content: center;
+			align-items: center;
 		}
 
 		.btn {
@@ -82,6 +158,21 @@
 			width: 100%;
 			height: 180px;
 			transform-style: preserve-3d;
+		}
+
+		.hint-banner {
+			font-size: 1.2rem;
+			font-weight: 5;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			text-align: center;
+			color: var(--text);
+			opacity: 0.5;
+			align-self: center;
+			width: 100%;
+			transform: translateX(50%);
+			transition: all 1s ease;
+			border-bottom: 1px solid var(--accent);
+			padding-bottom: 10px;
 		}
 
 		.card {
@@ -387,13 +478,28 @@
 			transform: translateX(0);
 			padding-left: 0;
 		}
+
+		.deck-icon {
+			display: inline-block;
+			width: 16px;
+			height: 16px;
+			border-radius: 50%;
+			background: radial-gradient(circle at 30% 30%, #4b5563 20%, #111827 90%);
+			margin-right: 6px;
+			box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.2);
+		}
 	</style>
 </head>
 
 <body>
-
-	<main>
-		<div class="nav-bar">
+	<div class="nav-bar">
+		<div class="left-side-items">
+			<div class="banner">
+				<!-- <span class="deck-icon"></span> -->
+				miniDeck
+			</div>
+		</div>
+		<div class="right-side-items">
 			<label for="fileInput" class="btn" id="addFilesbtn">
 				<span>
 					<svg id="plus" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" xml:space="preserve">
@@ -411,12 +517,24 @@
 					<span class="slider"></span>
 				</label>
 			</div>
+			<button class="btn">Help</button>
+			<button class="btn" id="settings">Settings</button>
 		</div>
+	</div>
 
+	<main>
+		<div class="hint-banner">
+			<span>Drag and drop or click Add Files to add files</span>
+		</div>
 		<div class="stack" id="stack">
 		</div>
 	</main>
-
+	<div class="modal" id="settingsModal">
+		<div class="modal-content">
+			<span class="close">&times;</span>
+			<p>Drag and drop or click Add Files to add files</p>
+		</div>
+	</div>
 	<div class="player">
 		<div class="left">
 			<div class="cover" id="cover">♪</div>
@@ -480,6 +598,8 @@
 		const currentTimeEl = document.getElementById("currentTime");
 		const durationEl = document.getElementById("duration");
 		const volume = document.getElementById("volume");
+		const settingsModal = document.getElementById("settingsModal");
+		const settings = document.getElementById("settings");
 
 		const default_music_svg = `<svg id="no-cover-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" xml:space="preserve"><path d="M16 28.458C9.131 28.458 3.542 22.87 3.542 16S9.131 3.542 16 3.542 28.458 9.13 28.458 16 22.869 28.458 16 28.458zm0-23.916C9.682 4.542 4.542 9.682 4.542 16S9.682 27.458 16 27.458 27.458 22.319 27.458 16 22.318 4.542 16 4.542z"/><path d="M11.583 25.185a.488.488 0 0 1-.182-.036.611.611 0 0 1-.128-.07c-3.376-1.714-5.518-5.213-5.518-9.086 0-1.616.373-3.173 1.109-4.625a.5.5 0 1 1 .893.451 9.15 9.15 0 0 0-1.002 4.174 9.209 9.209 0 0 0 5.045 8.24.506.506 0 0 1 .234.655.497.497 0 0 1-.451.297zm13.099-4.265a.5.5 0 0 1-.446-.727 9.14 9.14 0 0 0 1.008-4.186 9.21 9.21 0 0 0-5.045-8.241l.444-.896-.243.438.247-.435a10.207 10.207 0 0 1 5.597 9.135c0 1.623-.376 3.184-1.117 4.639a.498.498 0 0 1-.445.273zM16 11.963a4.037 4.037 0 1 0 0 8.074 4.037 4.037 0 0 0 0-8.074zm0 4.749a.712.712 0 1 1 0-1.425.712.712 0 0 1 0 1.425z"/></svg>`
 		const pause_svg = `<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32" xml:space="preserve"><style></style><path d="M13 28H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6H8v20zM25 28h-6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6h-4v20z"/></svg>`;
@@ -487,6 +607,12 @@
 
 		let tracks = [];
 		let index = -1;
+
+		settings.addEventListener("click", () => settingsModal.classList.add("modal-open"));
+
+		settingsModal.querySelector(".close").addEventListener("click", () => {
+			settingsModal.classList.remove("modal-open");
+		});
 
 		function setTheme() {
 			const themeSwitch = document.getElementById("themeSwitch");
@@ -541,7 +667,29 @@
 			tracks.push(...newTracks);
 			// tracks = tracks.reverse(); // optional if you want latest on top
 
-			if (index === -1 && tracks.length > 0) loadTrack(0);
+			/*if (index === -1 && tracks.length > 0) {
+				document.querySelector('.hint-banner').style.transition = 'fadeOut 2s ease-out';					
+				setTimeout(() => {
+					document.querySelector('.hint-banner').style.display = 'none';
+					loadTrack(0);
+				}, 2000);
+			}*/
+			if (index === -1 && tracks.length > 0) {
+				const hint = document.querySelector('.hint-banner');
+
+				// Start fade out
+				hint.style.opacity = '1'; // ensure it's visible
+				hint.style.transition = 'opacity 1.5s ease-out';
+				hint.style.opacity = '0'; // trigger fade out
+
+				// After transition ends, hide it completely
+				hint.addEventListener('transitionend', function handler() {
+					hint.style.display = 'none';
+					loadTrack(0);
+					hint.removeEventListener('transitionend', handler);
+				});
+			}
+
 			renderStack();
 		}
 
@@ -667,7 +815,6 @@
 					disableMarquee(card.querySelector(".name"));
 				}
 			});
-
 		}
 
 		function setActive(i) {
