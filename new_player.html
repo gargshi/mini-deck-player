@@ -8,12 +8,14 @@
 	<style>
 		:root {
 			--bg: #dfdfdf;
-			--panel: #ffffff;
+			--panel: #c6c6c6;
 			--muted: #6b7280;
 			--text: #111827;
 			--accent: #38bdf8;
 			--radius: 18px;
 			--nav-btn-background: #e5e7eb;
+			--nav-background: #313131;
+			--nav-text-color: #f8fafc;
 		}
 
 		body.dark {
@@ -23,6 +25,8 @@
 			--text: #f8fafc;
 			--accent: #eb7b25;
 			--nav-btn-background: #353535;
+			--nav-background: #0f172a;
+			--nav-text-color: #f8fafc;
 		}
 
 		* {
@@ -56,20 +60,22 @@
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			background: var(--panel);
+			background: var(--nav-background);
+			color: var(--nav-text-color);
 			padding: 0.8rem 1.5rem;
 			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 			position: sticky;
 			top: 0;
 			z-index: 10;
 			width: 100%;
+			border-bottom: var(--accent) 1px solid;
+			color: var(--nav-text-color);
 		}
 
 		.nav-bar .left-side-items {
 			display: flex;
 			align-items: center;
 			gap: 1rem;
-			color: var(--text);
 		}
 
 		.banner {
@@ -82,7 +88,7 @@
 			display: flex;
 			align-items: center;
 			gap: 1.2rem;
-			color: var(--text);
+
 		}
 
 		.nav-bar input[type="file"] {
@@ -103,42 +109,128 @@
 			background: #0e4a98;
 		}
 
+		/*.modal {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0, 0, 0, 0.5);
+				z-index: 100;
+				opacity: 0;
+				visibility: hidden;
+				transform: scale(0.95);
+				transition: all 0.5s ease;
+				justify-content: center;
+				align-items: center;
+
+			}
+
+			.modal .close {
+				position: absolute;
+				top: 10px;
+				right: 20px;
+				font-size: 30px;
+				font-weight: bold;		
+				border-radius: 50%;
+				color: var(--text);
+				cursor: pointer;
+			}
+
+			.modal-content {
+				font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+				background: var(--panel);
+				color: var(--text);
+				padding: 20px;
+				border-radius: 5px;
+				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+				border: var(--accent) 1px solid;
+				transform: translateY(0);
+				transition: all 0.2s ease, opacity 0.1s ease;
+				opacity: 0;
+				width: 80%;
+				height: 80%;
+			}
+
+			.modal.modal-open {
+				opacity: 1;
+				visibility: visible;
+				transform: scale(1);
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.modal.modal-open .modal-content {
+				transform: translateY(0);
+				opacity: 1;
+			}*/
+		/* ======== Smooth Modal Animation ======== */
 		.modal {
 			position: fixed;
 			top: 0;
 			left: 0;
 			width: 100%;
 			height: 100%;
-			background: rgba(0, 0, 0, 0.5);
+			background: rgba(0, 0, 0, 0.4);
+			-webkit-backdrop-filter: blur(4px);
+			/* Safari fallback */
+			backdrop-filter: blur(4px);
 			z-index: 100;
-			display: none;
+			display: flex;
 			justify-content: center;
 			align-items: center;
+			opacity: 0;
+			visibility: hidden;
+			transform: scale(0.98);
+			transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s ease;
 		}
 
-		.modal .close {
-			position: absolute;
-			top: 20px;
-			right: 20px;
-			font-size: 30px;
-			color: var(--text);
-			cursor: pointer;
-			border: 1px solid #e20000;
+		.modal.modal-open {
+			opacity: 1;
+			visibility: visible;
+			transform: scale(1);
 		}
 
 		.modal-content {
 			background: var(--panel);
 			color: var(--text);
-			padding: 20px;
-			border-radius: 5px;
-			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+			border: 1px solid var(--accent);
+			border-radius: 10px;
+			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+			padding: 30px;
+			width: 80%;
+			height: 80%;
+			max-width: 700px;
+			transform: translateY(20px);
+			opacity: 0;
+			transition: all 0.4s ease;
 		}
 
-		.modal-open {
-			display: flex;
-			justify-content: center;
-			align-items: center;
+		.modal.modal-open .modal-content {
+			transform: translateY(0);
+			opacity: 1;
 		}
+
+		/* Close button hover feedback */
+		.modal .close {
+			position: absolute;
+			top: 16px;
+			right: 24px;
+			font-size: 28px;
+			border-radius: 50%;
+			color: var(--text);
+			cursor: pointer;
+			padding: 5px 10px;
+			background: var(--accent);
+			transition: all 0.3s ease;
+		}
+
+		.modal .close:hover {
+			transform: scale(1.1);
+			box-shadow: 0 0 10px var(--accent);
+		}
+
 
 		.btn {
 			border: 1px solid #d1d5db;
@@ -243,7 +335,7 @@
 			position: sticky;
 			bottom: 0;
 			background: var(--panel);
-			border-top: 1px solid #e5e7eb;
+			border-top: 1px solid var(--accent);
 			box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.08);
 			display: grid;
 			grid-template-columns: 1fr auto 1fr;
@@ -260,7 +352,8 @@
 		.cover {
 			width: 56px;
 			height: 56px;
-			background-color: var(--muted);
+			background-color: var(--panel);
+			border: 1px solid #d1d5db;
 			color: var(--text);
 			border-radius: 10px;
 			display: grid;
@@ -308,8 +401,8 @@
 
 			background: var(--accent);
 			color: var(--text);
-
-			border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+			/* Fallback for older browsers: use RGBA similar to --muted (#6b7280 => rgb(107,114,128)) */
+			border: 1px solid rgba(107,114,128,0.25);
 			border-radius: 10%;
 
 			font-size: 16px;
@@ -368,10 +461,11 @@
 			gap: 10px;
 			font-weight: 600;
 			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			color: var(--text);
+			color: var(--nav-text-color);
 		}
 
 		.theme-toggle span {
+			-webkit-user-select: none;
 			user-select: none;
 		}
 
@@ -488,6 +582,189 @@
 			margin-right: 6px;
 			box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.2);
 		}
+
+		.settings-menu {
+			position: fixed;
+			font-weight: 2;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			margin-top: 10%;
+			margin-left: 5%;
+			justify-content: left;
+		}
+
+		.modal-banner {
+			font-size: 1.2rem;
+			font-weight: 5;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			width: fit-content;
+			border-bottom: var(--accent) 1px solid;
+		}
+
+		.settings-menu.setting {
+			display: flex;
+			gap: 10px;
+			align-items: center;
+		}
+
+		.progress-bar {
+			padding: 10px;
+			border-right: 1px solid var(--accent);
+		}
+
+		/* ====================== Modern Refreshed Settings Modal ====================== */
+		.modal {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.35);
+			-webkit-backdrop-filter: blur(10px);
+			backdrop-filter: blur(10px);
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 100;
+			opacity: 0;
+			visibility: hidden;
+			transform: scale(0.97);
+			transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s ease;
+		}
+
+		.modal.modal-open {
+			opacity: 1;
+			visibility: visible;
+			transform: scale(1);
+		}
+
+		/* inner box */
+		.modal-content {
+			position: relative;
+			background: color-mix(in srgb, var(--panel) 85%, var(--bg) 15%);
+			border: 1px solid var(--accent), transparent;
+			border-radius: 20px;
+			padding: 40px 40px 30px;
+			/* more breathing space on top */
+			width: 90%;
+			max-width: 600px;
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+			transform: translateY(25px);
+			opacity: 0;
+			transition: transform 0.4s ease, opacity 0.4s ease;
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.modal.modal-open .modal-content {
+			transform: translateY(0);
+			opacity: 1;
+		}
+
+		/* Close button — simple floating icon */
+		.modal .close {
+			position: absolute;
+			top: 16px;
+			right: 22px;
+			font-size: 30px;
+			font-weight: bold;
+			color: var(--accent);
+			background: transparent;
+			border: none;
+			cursor: pointer;
+			transition: transform 0.2s ease, color 0.2s ease;
+		}
+
+		.modal .close:hover {
+			transform: scale(1.2);
+			color: var(--text);
+		}
+
+		/* header text */
+		.modal-banner {
+			font-size: 1.6rem;
+			font-weight: 600;
+			margin-bottom: 1.5rem;
+			border-bottom: 2px solid var(--accent);
+			display: inline-block;
+			padding-bottom: 5px;
+			color: var(--text);
+		}
+
+		/* settings menu container */
+		.settings-menu {
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+			margin-top: 0rem;
+			margin-left: 0rem;
+			z-index: 1;
+			position: relative;
+			padding-left: 0;
+		}
+
+		/* each setting item */
+		.setting {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 12px 18px;
+			width: 100%;
+			border-radius: 12px;
+			background: color-mix(in srgb, var(--panel) 90%, var(--accent) 5%);
+			box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.05);
+			transition: background 0.3s ease, box-shadow 0.3s ease;
+		}
+
+		.setting:hover {
+			background: color-mix(in srgb, var(--accent) 10%, var(--panel) 85%);
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		}
+
+		.setting label {
+			font-size: 1rem;
+			font-weight: 500;
+			color: var(--text);
+		}
+
+		/* nice toggle styling */
+		.setting input[type="checkbox"] {
+			width: 44px;
+			height: 22px;
+			-webkit-appearance: none;
+			appearance: none;
+			background: #ccc;
+			border-radius: 20px;
+			position: relative;
+			cursor: pointer;
+			transition: all 0.3s ease;
+		}
+
+		.setting input[type="checkbox"]::before {
+			content: "";
+			position: absolute;
+			top: 3px;
+			left: 3px;
+			width: 16px;
+			height: 16px;
+			background: #fff;
+			border-radius: 50%;
+			transition: transform 0.3s ease;
+		}
+
+		.setting input[type="checkbox"]:checked {
+			background: var(--accent);
+		}
+
+		.setting input[type="checkbox"]:checked::before {
+			transform: translateX(22px);
+		}
 	</style>
 </head>
 
@@ -512,7 +789,7 @@
 			<input id="fileInput" type="file" accept="audio/*" multiple>
 			<div class="theme-toggle">
 				<span>Dark Mode</span>
-				<label class="switch">
+				<label class="switch" for="themeSwitch">
 					<input type="checkbox" id="themeSwitch">
 					<span class="slider"></span>
 				</label>
@@ -532,7 +809,17 @@
 	<div class="modal" id="settingsModal">
 		<div class="modal-content">
 			<span class="close">&times;</span>
-			<p>Drag and drop or click Add Files to add files</p>
+			<div class="modal-banner">Settings</div>
+			<div class="settings-menu">
+				<div class="setting">
+					<label for="shuffle">Shuffle</label>
+					<input type="checkbox" id="shuffle">
+				</div>
+				<div class="setting">
+					<label for="repeat">Repeat</label>
+					<input type="checkbox" id="repeat">
+				</div>
+			</div>
 		</div>
 	</div>
 	<div class="player">
@@ -545,9 +832,9 @@
 		</div>
 
 		<div class="controls">
-			<button id="prevBtn">
+			<button title="Previous button" id="prevBtn">
 				<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32"
-					style="enable-background:new 0 0 32 32" xml:space="preserve">
+					xml:space="preserve">
 					<style></style>
 					<path
 						d="M20 28a1 1 0 0 1-.521-.146l-18-11a1.002 1.002 0 0 1 0-1.708l18-11A.999.999 0 0 1 21 5v6.11a1 1 0 0 1-.479.854L13.918 16l6.603 4.035c.297.182.479.506.479.854V27a1 1 0 0 1-1 1zM3.918 16 19 25.217V21.45l-7.521-4.596a1 1 0 0 1 0-1.707L19 10.55V6.783L3.918 16z" />
@@ -555,15 +842,15 @@
 						d="M30 28a1 1 0 0 1-.521-.146l-18-11a1.002 1.002 0 0 1 0-1.708l18-11A.999.999 0 0 1 31 5v22a1 1 0 0 1-1 1zM13.918 16 29 25.217V6.783L13.918 16z" />
 				</svg>
 			</button>
-			<button id="playPauseBtn">
+			<button title="Play button" id="playPauseBtn">
 				<svg version="1.1" id="play" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32"
 					xml:space="preserve">
 					<path
 						d="M7 28a.999.999 0 0 1-1-1V5a1 1 0 0 1 1.521-.854l18 11a1.001 1.001 0 0 1 0 1.708l-18 11A1 1 0 0 1 7 28zM8 6.783v18.434L23.082 16 8 6.783z" />
 				</svg>
 			</button>
-			<button id="nextBtn"><svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0"
-					viewBox="0 0 32 32" style="enable-background:new 0 0 32 32" xml:space="preserve">
+			<button title="Next button" id="nextBtn"><svg version="1.1" id="Layer_2" xmlns="http://www.w3.org/2000/svg"
+					x="0" y="0" viewBox="0 0 32 32" xml:space="preserve">
 					<style></style>
 					<path
 						d="M12 28a1 1 0 0 1-1-1v-6.111c0-.348.182-.672.479-.854L18.082 16l-6.603-4.035A1.001 1.001 0 0 1 11 11.11V5a1 1 0 0 1 1.521-.854l18 11a1.002 1.002 0 0 1 0 1.708l-18 11A1 1 0 0 1 12 28zm1-6.55v3.767L28.082 16 13 6.783v3.767l7.521 4.596a1.001 1.001 0 0 1 0 1.708L13 21.45z" />
@@ -574,10 +861,16 @@
 		</div>
 
 		<div class="right">
-			<span id="currentTime">0:00</span>
-			<input id="seek" type="range" min="0" max="1000" value="0" step="1">
-			<span id="duration">0:00</span>
-			<input id="volume" type="range" min="0" max="1" step="0.01" default="0.5">
+			<div class="progress-bar">
+				<label id="currentTime" for="seek">0:00</label>
+				<input id="seek" type="range" min="0" max="1000" value="0" step="1">
+				<label id="duration" for="seek">0:00</label>
+			</div>
+			<div class="volume-bar">
+				<label for="volume">Volume</label>
+				<input id="volume" type="range" min="0" max="1" step="0.01" default="0.5">
+			</div>
+
 		</div>
 	</div>
 
@@ -585,6 +878,7 @@
 
 
 	<script defer>
+		const app_name = "miniDeck";
 		const fileInput = document.getElementById("fileInput");
 		const stack = document.getElementById("stack");
 		const titleEl = document.getElementById("title");
@@ -608,11 +902,29 @@
 		let tracks = [];
 		let index = -1;
 
-		settings.addEventListener("click", () => settingsModal.classList.add("modal-open"));
+		settings.addEventListener("click", () => {
+			//settingsModal.style.transform = "translateY(30)";
+			settingsModal.classList.add("modal-open");
+		});
 
 		settingsModal.querySelector(".close").addEventListener("click", () => {
 			settingsModal.classList.remove("modal-open");
 		});
+
+		// Close modal when clicking outside content
+		settingsModal.addEventListener("click", (e) => {
+			if (e.target === settingsModal) {
+				settingsModal.classList.remove("modal-open");
+			}
+		});
+		document.addEventListener("keydown", (e) => {
+			if (e.key === "Escape" && settingsModal.classList.contains("modal-open")) {
+				settingsModal.classList.remove("modal-open");
+			}
+		});
+
+		document.title = app_name;
+		document.querySelector(".banner").innerHTML = app_name;
 
 		function setTheme() {
 			const themeSwitch = document.getElementById("themeSwitch");
@@ -770,11 +1082,11 @@
 					// Small delay so CSS transition triggers naturally
 					requestAnimationFrame(() => {
 						card.style.transform = `
-							rotateY(0deg)
-							translateZ(${10 + (index - i)}px)
-							translateX(${windowWidth * 0.5 + (i - index) * 10}px)
-							scale(0.95)
-						`;
+								rotateY(0deg)
+								translateZ(${10 + (index - i)}px)
+								translateX(${windowWidth * 0.5 + (i - index) * 10}px)
+								scale(0.95)
+							`;
 					});
 				}
 			}
@@ -785,21 +1097,21 @@
 				if (i < index) {
 					// LEFT SIDE cards					
 					card.style.transform = `
-						rotateY(0deg)
-						translateZ(${-10 - (index - i)}px)
-						translateX(${windowWidth * 0.1 + (i - index) * 10}px)
-						scale(0.9)
-					`;
+							rotateY(0deg)
+							translateZ(${-10 - (index - i)}px)
+							translateX(${windowWidth * 0.1 + (i - index) * 10}px)
+							scale(0.9)
+						`;
 					disableMarquee(card.querySelector(".name"));
 				}
 				else if (i === index) {
 					// CENTER (active) card					
 					card.style.transform = `
-						rotateY(0deg)
-						translateZ(60px)
-						translateX(${windowWidth * 0.45}px)
-						scale(1.05)
-					`;
+							rotateY(0deg)
+							translateZ(60px)
+							translateX(${windowWidth * 0.45}px)
+							scale(1.05)
+						`;
 					card.style.border = "2px solid var(--accent)";
 					card.style.height = "300px";
 					enableMarquee(card.querySelector(".name"));
@@ -807,11 +1119,11 @@
 				else {
 					// RIGHT SIDE cards					
 					card.style.transform = `
-							rotateY(0deg)
-							translateZ(${10 + (index - i)}px)
-							translateX(${windowWidth * 0.8 + (i - index) * 10}px)
-							scale(0.95)
-						`;
+								rotateY(0deg)
+								translateZ(${10 + (index - i)}px)
+								translateX(${windowWidth * 0.8 + (i - index) * 10}px)
+								scale(0.95)
+							`;
 					disableMarquee(card.querySelector(".name"));
 				}
 			});
