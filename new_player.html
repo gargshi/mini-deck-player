@@ -28,7 +28,6 @@
 			--nav-background: #0f172a;
 			--nav-text-color: #f8fafc;
 		}
-
 		* {
 			box-sizing: border-box;
 			margin: 0;
@@ -108,73 +107,6 @@
 		.nav-bar .btn:hover {
 			background: #0e4a98;
 		}
-
-		/*.modal {
-				position: fixed;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				background: rgba(0, 0, 0, 0.5);
-				z-index: 100;
-				opacity: 0;
-				visibility: hidden;
-				transform: scale(0.95);
-				transition: all 0.5s ease;
-				justify-content: center;
-				align-items: center;
-
-			}
-
-			.modal .close {
-				position: absolute;
-				top: 10px;
-				right: 20px;
-				font-size: 30px;
-				font-weight: bold;		
-				border-radius: 50%;
-				color: var(--text);
-				cursor: pointer;
-			}
-
-			.modal-content {
-				font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-				background: var(--panel);
-				color: var(--text);
-				padding: 20px;
-				border-radius: 5px;
-				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-				border: var(--accent) 1px solid;
-				transform: translateY(0);
-				transition: all 0.2s ease, opacity 0.1s ease;
-				opacity: 0;
-				width: 80%;
-				height: 80%;
-			}
-
-			.modal.modal-open {
-				opacity: 1;
-				visibility: visible;
-				transform: scale(1);
-				display: flex;
-				justify-content: center;
-				align-items: center;
-			}
-
-			.modal.modal-open .modal-content {
-				transform: translateY(0);
-				opacity: 1;
-			}*/
-		/* ======== Smooth Modal Animation ======== */
-		
-
-		
-
-		
-
-		
-
-		
 
 		.modal .close:hover {
 			transform: scale(1.1);
@@ -352,7 +284,7 @@
 			background: var(--accent);
 			color: var(--text);
 			/* Fallback for older browsers: use RGBA similar to --muted (#6b7280 => rgb(107,114,128)) */
-			border: 1px solid rgba(107,114,128,0.25);
+			border: 1px solid rgba(107, 114, 128, 0.25);
 			border-radius: 10%;
 
 			font-size: 16px;
@@ -619,39 +551,49 @@
 			opacity: 1;
 		}
 
-		
-		
+
+
 
 		/* Close button — simple floating icon */
 		.modal .close {
-			padding: 5px 10px;
-			position: absolute;
-			border-radius: 50%;
-			top: 16px;
-			right: 22px;
-			font-size: 30px;
+			width: 36px;
+			height: 36px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 24px;
 			font-weight: bold;
 			color: var(--accent);
-			background: var(--accent), transparent;
-			border: none;
+			background: transparent;
+			border: 1px solid var(--accent);
+			border-radius: 50%;
 			cursor: pointer;
-			transition: transform 0.2s ease, color 0.2s ease;
+			transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
 		}
-		
+
 		/* Close button hover feedback */
 		.modal .close:hover {
-			transform: scale(1.2);
-			color: var(--text);
+			background: var(--accent);
+			color: var(--panel);
+			transform: scale(1.1);
+		}
+
+		.modal-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			/* left-right alignment */
+			margin-bottom: 1.2rem;
+			padding-bottom: 0.5rem;
+			border-bottom: 1px solid var(--accent);
+			/* subtle separator line */
 		}
 
 		/* header text */
-		.modal-banner {
+		.modal-bann {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 			font-size: 1.6rem;
 			font-weight: 600;
-			margin-bottom: 1.5rem;
-			border-bottom: 2px solid var(--accent);
-			display: inline-block;
-			padding-bottom: 5px;
 			color: var(--text);
 		}
 
@@ -665,6 +607,7 @@
 			z-index: 1;
 			position: relative;
 			padding-left: 0;
+
 		}
 
 		/* each setting item */
@@ -683,6 +626,7 @@
 		.setting:hover {
 			background: color-mix(in srgb, var(--accent) 10%, var(--panel) 85%);
 			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			border: 1px solid var(--accent);
 		}
 
 		.setting label {
@@ -722,6 +666,13 @@
 
 		.setting input[type="checkbox"]:checked::before {
 			transform: translateX(22px);
+		}
+
+		body,
+		.modal-content,
+		.player,
+		.card {
+			transition: background 0.5s ease, color 0.5s ease, border 0.5s ease;
 		}
 	</style>
 </head>
@@ -766,8 +717,10 @@
 	</main>
 	<div class="modal" id="settingsModal">
 		<div class="modal-content">
-			<span class="close">&times;</span>
-			<div class="modal-banner">Settings</div>
+			<div class="modal-header">
+				<div class="modal-bann">Settings</div>
+				<span class="close">&times;</span>
+			</div>
 			<div class="settings-menu">
 				<div class="setting">
 					<label for="shuffle">Shuffle</label>
