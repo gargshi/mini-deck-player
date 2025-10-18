@@ -166,65 +166,15 @@
 				opacity: 1;
 			}*/
 		/* ======== Smooth Modal Animation ======== */
-		.modal {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background: rgba(0, 0, 0, 0.4);
-			-webkit-backdrop-filter: blur(4px);
-			/* Safari fallback */
-			backdrop-filter: blur(4px);
-			z-index: 100;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			opacity: 0;
-			visibility: hidden;
-			transform: scale(0.98);
-			transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s ease;
-		}
+		
 
-		.modal.modal-open {
-			opacity: 1;
-			visibility: visible;
-			transform: scale(1);
-		}
+		
 
-		.modal-content {
-			background: var(--panel);
-			color: var(--text);
-			border: 1px solid var(--accent);
-			border-radius: 10px;
-			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-			padding: 30px;
-			width: 80%;
-			height: 80%;
-			max-width: 700px;
-			transform: translateY(20px);
-			opacity: 0;
-			transition: all 0.4s ease;
-		}
+		
 
-		.modal.modal-open .modal-content {
-			transform: translateY(0);
-			opacity: 1;
-		}
+		
 
-		/* Close button hover feedback */
-		.modal .close {
-			position: absolute;
-			top: 16px;
-			right: 24px;
-			font-size: 28px;
-			border-radius: 50%;
-			color: var(--text);
-			cursor: pointer;
-			padding: 5px 10px;
-			background: var(--accent);
-			transition: all 0.3s ease;
-		}
+		
 
 		.modal .close:hover {
 			transform: scale(1.1);
@@ -645,13 +595,15 @@
 
 		/* inner box */
 		.modal-content {
+			color: var(--text);
 			position: relative;
 			background: color-mix(in srgb, var(--panel) 85%, var(--bg) 15%);
 			border: 1px solid var(--accent), transparent;
-			border-radius: 20px;
+			border-radius: 10px;
 			padding: 40px 40px 30px;
 			/* more breathing space on top */
 			width: 90%;
+			height: 80%;
 			max-width: 600px;
 			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 			transform: translateY(25px);
@@ -667,20 +619,26 @@
 			opacity: 1;
 		}
 
+		
+		
+
 		/* Close button — simple floating icon */
 		.modal .close {
+			padding: 5px 10px;
 			position: absolute;
+			border-radius: 50%;
 			top: 16px;
 			right: 22px;
 			font-size: 30px;
 			font-weight: bold;
 			color: var(--accent);
-			background: transparent;
+			background: var(--accent), transparent;
 			border: none;
 			cursor: pointer;
 			transition: transform 0.2s ease, color 0.2s ease;
 		}
-
+		
+		/* Close button hover feedback */
 		.modal .close:hover {
 			transform: scale(1.2);
 			color: var(--text);
