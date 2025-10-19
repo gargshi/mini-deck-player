@@ -28,6 +28,7 @@
 			--nav-background: #0f172a;
 			--nav-text-color: #f8fafc;
 		}
+
 		* {
 			box-sizing: border-box;
 			margin: 0;
@@ -668,6 +669,12 @@
 			transform: translateX(22px);
 		}
 
+		.indicator {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			font-size: 1rem;
+			color: var(--text);
+		}
+
 		body,
 		.modal-content,
 		.player,
@@ -781,6 +788,10 @@
 				<label for="volume">Volume</label>
 				<input id="volume" type="range" min="0" max="1" step="0.01" default="0.5">
 			</div>
+			<div class="indicator">
+				<div>REP <span id="rep_status">--</span></div>
+				<div>SHFL <span id="shfl_status">--</span></div>
+			</div>
 
 		</div>
 	</div>
@@ -805,6 +816,8 @@
 		const volume = document.getElementById("volume");
 		const settingsModal = document.getElementById("settingsModal");
 		const settings = document.getElementById("settings");
+		const shuffleToggle = document.getElementById("shuffle");
+		const repeatToggle = document.getElementById("repeat");
 
 		const default_music_svg = `<svg id="no-cover-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" xml:space="preserve"><path d="M16 28.458C9.131 28.458 3.542 22.87 3.542 16S9.131 3.542 16 3.542 28.458 9.13 28.458 16 22.869 28.458 16 28.458zm0-23.916C9.682 4.542 4.542 9.682 4.542 16S9.682 27.458 16 27.458 27.458 22.319 27.458 16 22.318 4.542 16 4.542z"/><path d="M11.583 25.185a.488.488 0 0 1-.182-.036.611.611 0 0 1-.128-.07c-3.376-1.714-5.518-5.213-5.518-9.086 0-1.616.373-3.173 1.109-4.625a.5.5 0 1 1 .893.451 9.15 9.15 0 0 0-1.002 4.174 9.209 9.209 0 0 0 5.045 8.24.506.506 0 0 1 .234.655.497.497 0 0 1-.451.297zm13.099-4.265a.5.5 0 0 1-.446-.727 9.14 9.14 0 0 0 1.008-4.186 9.21 9.21 0 0 0-5.045-8.241l.444-.896-.243.438.247-.435a10.207 10.207 0 0 1 5.597 9.135c0 1.623-.376 3.184-1.117 4.639a.498.498 0 0 1-.445.273zM16 11.963a4.037 4.037 0 1 0 0 8.074 4.037 4.037 0 0 0 0-8.074zm0 4.749a.712.712 0 1 1 0-1.425.712.712 0 0 1 0 1.425z"/></svg>`
 		const pause_svg = `<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32" xml:space="preserve"><style></style><path d="M13 28H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6H8v20zM25 28h-6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6h-4v20z"/></svg>`;
@@ -812,6 +825,21 @@
 
 		let tracks = [];
 		let index = -1;
+
+		let originalOrder = [];
+		let shuffled = false; // is shuffle currently active
+
+		function saveOriginalOrder() {
+			originalOrder = [...tracks];
+		}
+
+		function restoreOriginalOrder() {
+			if (originalOrder.length) {
+				const currentTrack = tracks[index];
+				tracks = [...originalOrder];
+				index = tracks.findIndex(t => t.url === currentTrack.url);
+			}
+		}
 
 		settings.addEventListener("click", () => {
 			//settingsModal.style.transform = "translateY(30)";
@@ -858,6 +886,96 @@
 		}
 		setTheme();
 
+		/*function shuffleTracks(tracks){
+			if (tracks.length > 1){
+				tracks = tracks.sort(() => Math.random() - 0.5);
+			}			
+			//alert("Tracks have been shuffled!");
+		}*/
+		function shuffleArray(array) {
+			const arr = [...array];
+			for (let i = arr.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[arr[i], arr[j]] = [arr[j], arr[i]];
+			}
+			return arr;
+		}
+
+		function applyShuffle() {
+			if (tracks.length <= 1) return;
+
+			// Preserve current track
+			const currentTrack = (index >= 0 && index < tracks.length) ? tracks[index] : tracks[0];
+
+			// Create a fully shuffled copy
+			const shuffledTracks = shuffleArray(tracks);
+
+			// Find the new index of the same current track
+			const newIndex = shuffledTracks.findIndex(t => t.url === currentTrack.url);
+			if (newIndex === -1) return;
+
+			tracks = [...shuffledTracks];
+			index = newIndex;
+
+			shuffled = true;
+			localStorage.setItem("shuffle", "true");
+			document.getElementById("shfl_status").innerText = "ON";
+			showToast("Shuffle is ON");
+
+			refreshStack();
+			//arrangement(); // realign layout now that index changed
+		}
+
+
+		function disableShuffle() {
+			if (!originalOrder.length) return;
+
+			const currentTrack = (index >= 0 && index < tracks.length) ? tracks[index] : tracks[0];
+			const currentURL = currentTrack.url;
+
+			tracks = [...originalOrder];
+			index = tracks.findIndex(t => t.url === currentURL);
+			if (index === -1) index = 0;
+
+			shuffled = false;
+			localStorage.setItem("shuffle", "false");
+			document.getElementById("shfl_status").innerText = "OFF";
+			showToast("Shuffle is OFF");
+
+			refreshStack();
+			//arrangement(); // ensure current track centers correctly
+		}
+
+
+
+
+
+		shuffleToggle.addEventListener("change", () => {
+			if (shuffleToggle.checked) {
+				applyShuffle();
+			} else {
+				disableShuffle();
+			}
+		});
+
+
+
+
+		function loadShuffleFromLocalStorage() {
+			const shuffleValue = localStorage.getItem("shuffle");
+			if (shuffleValue === "true") {
+				shuffleToggle.checked = true;
+				applyShuffle();				
+			} else {
+				shuffleToggle.checked = false;
+				disableShuffle();				
+			}
+		}
+
+
+		loadShuffleFromLocalStorage();
+		document.getElementById("shfl_status").innerHTML = shuffleToggle.checked ? "ON" : "OFF";
+
 
 
 		function formatTime(sec) {
@@ -888,15 +1006,20 @@
 			}
 
 			tracks.push(...newTracks);
+			saveOriginalOrder();
 			// tracks = tracks.reverse(); // optional if you want latest on top
 
-			/*if (index === -1 && tracks.length > 0) {
-				document.querySelector('.hint-banner').style.transition = 'fadeOut 2s ease-out';					
-				setTimeout(() => {
-					document.querySelector('.hint-banner').style.display = 'none';
-					loadTrack(0);
-				}, 2000);
-			}*/
+			//shuffle if enabled
+			// If shuffle is active, integrate new tracks into the shuffled order dynamically
+			if (shuffled) {
+				const currentTrack = tracks[index >= 0 ? index : 0];
+				const before = tracks.slice(0, index + 1);
+				const after = tracks.slice(index + 1);
+
+				const shuffledAfter = shuffleArray(after);
+				tracks = [...before, ...shuffledAfter];
+			}
+
 			if (index === -1 && tracks.length > 0) {
 				const hint = document.querySelector('.hint-banner');
 
@@ -913,6 +1036,20 @@
 				});
 			}
 
+			if (shuffled) {
+				showToast(`${newTracks.length} new tracks added & shuffled`);
+			} else {
+				showToast(`${newTracks.length} new tracks added`);
+			}
+
+			refreshStack();
+			//arrangement();
+		}
+
+		function refreshStack() {
+			// Clear existing cards completely and rebuild from scratch
+			//showToast("Refreshing stack...");
+			stack.innerHTML = "";
 			renderStack();
 		}
 
@@ -987,22 +1124,18 @@
 					// 🧠 Start from offscreen position for smooth entry
 					card.style.transform = `translateX(${windowWidth}px) rotateY(0deg)`;
 					card.style.transition = "transform 1s ease";
-
-					stack.appendChild(card);
-
-					// Small delay so CSS transition triggers naturally
-					requestAnimationFrame(() => {
-						card.style.transform = `
-								rotateY(0deg)
-								translateZ(${10 + (index - i)}px)
-								translateX(${windowWidth * 0.5 + (i - index) * 10}px)
-								scale(0.95)
-							`;
-					});
+					stack.appendChild(card);					
 				}
 			}
 
-			// 2️⃣ Update transforms for all cards smoothly
+			// 2️⃣ Update transforms for all cards smoothly			
+			arrangement();
+
+		}
+
+		function arrangement() {
+			//console.log("Arranging...");
+			const windowWidth = window.innerWidth;			
 			[...stack.children].forEach((card, i) => {
 				card.style.transition = "transform 1s ease";
 				if (i < index) {
@@ -1051,7 +1184,8 @@
 			audio.src = t.url;
 			audio.volume = 1 * volume.value;
 			titleEl.textContent = t.name;
-			artistEl.textContent = `Track ${i + 1} of ${tracks.length}`;
+			//artistEl.textContent = `Track ${i + 1} of ${tracks.length}`;
+			artistEl.textContent = t.metadata.artist;
 			// show album art if it exists			
 			if (t.cover && typeof t.cover === "string" && t.cover.startsWith("blob:")) {
 				const img = document.createElement("img");
@@ -1275,6 +1409,51 @@
 			}
 
 		}
+
+		function showToast(message) {
+			const toast = document.createElement("div");
+			toast.textContent = message;
+
+			// Positioning
+			toast.style.position = "fixed";
+			toast.style.top = "20px";                // slightly below top edge
+			toast.style.left = "50%";               // center horizontally
+			toast.style.transform = "translateX(-50%)"; // true centering
+			toast.style.zIndex = "9999";            // stay above all elements
+
+			// Appearance
+			toast.style.background = "black ";
+			toast.style.border = "2px solid var(--accent)";
+			toast.style.color = "var(--text)";
+			toast.style.padding = "12px 22px";
+			toast.style.borderRadius = "10px";
+			toast.style.fontFamily = "Segoe UI, sans-serif";
+			toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.25)";
+			toast.style.fontWeight = "6";
+			toast.style.letterSpacing = "0.3px";
+
+			// Animation
+			toast.style.opacity = "0";
+			toast.style.transform += " translateY(-100px)"; // start slightly above
+			toast.style.transition = "all 2s ease";
+
+			document.body.appendChild(toast);
+
+			// Trigger fade-in + slide-down
+			requestAnimationFrame(() => {
+				toast.style.opacity = "1";
+				toast.style.transform = "translate(-50%, 0)";
+			});
+
+			// Auto remove
+			setTimeout(() => {
+				toast.style.opacity = "1";
+				toast.style.transform = "translate(-50%, -100px)";
+				setTimeout(() => toast.remove(), 1000);
+			}, 5000);
+		}
+		showToast(`Welcome to ${app_name}!`);
+
 	</script>
 </body>
 
