@@ -64,6 +64,7 @@
 			perspective: 1000px;
 			overflow: hidden;
 			position: relative;
+			/*background: linear-gradient(10deg, var(--accent) 0%, var(--panel) 100%);*/
 		}
 
 		.nav-bar {
@@ -150,25 +151,40 @@
 		}
 
 		.stack {
-			position: relative;
+			position: absolute;
+			top: 0;
+			/* ensure no offset */
+			transform: translateY(0);
+			display: flex;
+			align-items: center;
 			width: 100%;
-			height: 180px;
+			height: 100%;
+			border: 1px solid var(--accent);
+			z-index: 3;
 			transform-style: preserve-3d;
 		}
 
 		.hint-banner {
+			position: absolute;
+
+			text-align: center;
+			align-items: center;
+			justify-content: center;
+			width: 50%;
+
+			z-index: 2;
+
 			font-size: 1.2rem;
 			font-weight: 5;
 			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 			text-align: center;
 			color: var(--text);
 			opacity: 0.5;
-			align-self: center;
-			width: 100%;
-			transform: translateX(50%);
+
+			/*transform: translateX(50%);*/
 			transition: all 1s ease;
-			border-bottom: 1px solid var(--accent);
-			padding-bottom: 10px;
+			border: 1px solid var(--accent);
+			padding-bottom: 20px;
 		}
 
 		.card {
@@ -190,11 +206,7 @@
 			overflow: hidden;
 		}
 
-		.card>* {
-			position: relative;
-			z-index: 1;
-			/* ensure text stays above */
-		}
+
 
 		.card.cover-image {
 			background-color: gray;
@@ -230,7 +242,7 @@
 		.card.active {
 			z-index: 10;
 			transform: rotateY(0deg) translateZ(10px) scale(1.05);
-			box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+			/*box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);*/
 			border: 2px solid var(--accent);
 		}
 
@@ -318,7 +330,7 @@
 		.controls button svg {
 			width: 21px;
 			height: 21px;
-			fill:white;
+			fill: white;
 
 		}
 
@@ -374,7 +386,7 @@
 			border-radius: 50%;
 			box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
 			transition: all 0.25s ease;
-			
+
 			/* centers thumb vertically */
 		}
 
@@ -722,6 +734,31 @@
 			color: var(--text);
 		}
 
+		#dot-visualizer {
+			position: absolute;
+			/*bottom: 80px;*/
+			top: 0;
+			/* just above player bar */
+			left: 0;
+			width: 100%;
+			/*height: 120px;*/
+			pointer-events: none;
+			/* so clicks pass through */
+			z-index: 100;
+			opacity: 0.7;
+		}
+
+		.border-react {
+			position: absolute;
+			inset: 0;
+			pointer-events: none;
+			border-style: solid;
+			border-width: 2px;
+			border-color: transparent;
+			border-radius: var(--radius);
+			transition: border-width 0.06s ease, border-color 0.06s ease;
+		}
+
 		body,
 		.modal-content,
 		.player,
@@ -760,7 +797,10 @@
 			<span>Drag and drop or click Add Files to add files</span>
 		</div>
 		<div class="stack" id="stack">
+
 		</div>
+		<!-- Dot Pulse Visualizer -->
+		<canvas id="dot-visualizer"></canvas>
 	</main>
 	<div class="modal" id="settingsModal">
 		<div class="modal-content">
@@ -784,7 +824,10 @@
 			</div>
 		</div>
 	</div>
+
+
 	<div class="player">
+
 		<div class="left">
 			<div class="cover" id="cover">♪</div>
 			<div class="info">
@@ -1188,9 +1231,15 @@
 					sizeDiv.textContent = t.metadata.artist;
 
 
+
 					card.appendChild(coverDiv);
 					card.appendChild(nameDiv);
 					card.appendChild(sizeDiv);
+
+					const borderReact = document.createElement("div");
+					borderReact.classList.add("border-react");
+					card.appendChild(borderReact);
+
 					card.onclick = () => setActive(i);
 
 					// 🧠 Start from offscreen position for smooth entry
@@ -1214,11 +1263,14 @@
 					// LEFT SIDE cards					
 					card.style.transform = `
 							rotateY(0deg)
-							translateZ(${-10 - (index - i)}px)
+							translateZ(${10 - (index - i)}px)
 							translateX(${windowWidth * 0.1 + (i - index) * 10}px)
 							scale(0.9)
 						`;
+					//card.style.zIndex = index - i;
+					card.onclick = () => setActive(i);
 					disableMarquee(card.querySelector(".name"));
+					resetStyles(card);
 				}
 				else if (i === index) {
 					// CENTER (active) card					
@@ -1230,8 +1282,9 @@
 						`;
 					card.style.border = "2px solid var(--accent)";
 					card.style.height = "300px";
-					card.onclick=playPause;
+					card.onclick = playPause;
 					enableMarquee(card.querySelector(".name"));
+
 				}
 				else {
 					// RIGHT SIDE cards					
@@ -1239,14 +1292,17 @@
 								rotateY(0deg)
 								translateZ(${10 + (index - i)}px)
 								translateX(${windowWidth * 0.8 + (i - index) * 10}px)
-								scale(0.95)
+								scale(0.9)
 							`;
+					card.onclick = () => setActive(i);
 					disableMarquee(card.querySelector(".name"));
+					resetStyles(card);
 				}
 			});
 		}
 
 		function setActive(i) {
+			//showToast("Switching to track " + (i + 1) + " of " + tracks.length);
 			index = i;
 			loadTrack(i);
 			playTrack();
@@ -1333,7 +1389,7 @@
 		audio.onended = nextTrack;
 
 		//attempt to extract cover from mp3
-		async function extractCoverFromMP3(file) {
+		/*async function extractCoverFromMP3(file) {
 			const buffer = await file.arrayBuffer();
 			const view = new DataView(buffer);
 
@@ -1383,7 +1439,7 @@
 			console.log("No embedded image found.");
 			return null;
 		}
-
+*/
 		async function extractMetadataFromAudio(file) {
 			try {
 				const buffer = await file.arrayBuffer();
@@ -1534,6 +1590,179 @@
 				setTimeout(() => toast.remove(), 1000);
 			}, 5000);
 		}
+
+		// ===== DOT VISUALIZER =====
+		const canvas = document.getElementById("dot-visualizer");
+		const ctx = canvas.getContext("2d");
+		let audioCtx, analyser, source, dataArray, bufferLength;
+
+		function resizeCanvas() {
+			canvas.width = window.innerWidth;
+			canvas.height = 120;
+		}
+		window.addEventListener("resize", resizeCanvas);
+		resizeCanvas();
+
+		function initVisualizer() {
+			if (audioCtx) return; // already initialized
+			audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+			analyser = audioCtx.createAnalyser();
+			source = audioCtx.createMediaElementSource(audio);
+			analyser.fftSize = 128;
+			bufferLength = analyser.frequencyBinCount;
+			dataArray = new Uint8Array(bufferLength);
+			source.connect(analyser);
+			analyser.connect(audioCtx.destination);
+			drawDots();
+		}
+
+		function drawDotsTypeOne() {
+			requestAnimationFrame(drawDots);
+			analyser.getByteFrequencyData(dataArray);
+
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			const dotCount = 40; // number of dots
+			const gap = canvas.width / dotCount;
+			const centerY = canvas.height / 2;
+
+			for (let i = 0; i < dotCount; i++) {
+				const value = dataArray[i * 2] || 0;
+				const radius = Math.max(4, (value / 255) * 20);
+
+				const x = i * gap + gap / 2;
+				const y = centerY; //+ Math.sin(i * 0.5 + Date.now() * 0.002) * 5;
+
+				ctx.beginPath();
+				ctx.arc(x, y, radius, 0, Math.PI * 2);
+				ctx.fillStyle = getComputedStyle(document.body)
+					.getPropertyValue("--accent")
+					.trim();
+				ctx.globalAlpha = 0.8;
+				ctx.fill();
+			}
+		}
+		function drawDots() {
+			requestAnimationFrame(drawDots);
+			analyser.getByteFrequencyData(dataArray);
+
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			const centerX = canvas.width / 2;
+			const centerY = canvas.height / 2;
+			const totalDots = 40; // total (20 each side)
+			const half = totalDots / 2;
+			const spacing = canvas.width / totalDots;
+
+			for (let i = 0; i < totalDots; i++) {
+				const distanceFromCenter = Math.abs(i - half);
+				const mirroredIndex = Math.floor(
+					(bufferLength / half) * distanceFromCenter
+				);
+
+				const value = dataArray[mirroredIndex] || 0;
+
+				// Center beats stronger, edges softer
+				const falloff = 1 - distanceFromCenter / half;
+				const radius = Math.max(2, (value / 255) * 15 * falloff);
+
+				const x = i * spacing;
+				const y = centerY;
+
+				ctx.beginPath();
+				ctx.arc(x, y, radius, 0, Math.PI * 2);
+				ctx.fillStyle = getComputedStyle(document.body)
+					.getPropertyValue("--accent")
+					.trim();
+				ctx.globalAlpha = 0.85 * falloff;
+				ctx.fill();
+			}
+		}
+
+		let smoothed = 0;
+
+		function animateCardShadow() {
+			requestAnimationFrame(animateCardShadow);
+			if (!analyser || index === -1) return;
+
+			analyser.getByteFrequencyData(dataArray);
+
+			const activeCard = stack.children[index];
+			if (!activeCard) return;
+
+			// Split frequency ranges
+			const bass = avg(dataArray.slice(0, bufferLength * 0.2));
+			const mids = avg(dataArray.slice(bufferLength * 0.2, bufferLength * 0.6));
+			const highs = avg(dataArray.slice(bufferLength * 0.6));
+
+			// Weight them to shape the glow
+			const intensity = Math.pow((bass * 0.6 + mids * 0.3 + highs * 0.1) / 255, 2.2);
+
+			// Smooth motion
+			window._shadowSmooth = window._shadowSmooth * 0.8 + intensity * 0.2 || intensity;
+
+			const accent = getComputedStyle(document.body)
+				.getPropertyValue("--accent")
+				.trim();
+
+			const spread = 5 + window._shadowSmooth * 40; // how wide the glow is
+			const blur = 10 + window._shadowSmooth * 50;  // how soft it is
+			const alpha = 0.4 + window._shadowSmooth * 0.5;
+
+			smoothed = smoothed * 0.8 + intensity * 0.2;
+
+			const coverArt = activeCard.querySelector(".cover-image");
+			coverArt.style.scale = 1 + smoothed * 0.2;
+			coverArt.style.opacity = 0.7 + smoothed * 0.5;
+			activeCard.style.boxShadow = `0 0 ${blur}px ${spread}px ${accent}${alphaToHex(alpha)}`;
+		}
+
+		function avg(arr) {
+			return arr.reduce((a, b) => a + b, 0) / arr.length || 0;
+		}
+
+		// converts 0–1 alpha to hex (for rgba-less shadows)
+		function alphaToHex(a) {
+			return Math.round(a * 255).toString(16).padStart(2, '0');
+		}
+
+
+		audio.addEventListener("play", () => {
+			if (!audioCtx) initVisualizer();
+			if (audioCtx.state === "suspended") audioCtx.resume();
+			//animateCardBorder();
+			animateCardShadow();
+			//animateStackGradient();
+		});
+		audio.addEventListener("pause", () => {
+			const activeCard = stack.children[index];
+			if (activeCard) {
+				activeCard.style.border = "2px solid var(--accent)";
+				activeCard.style.boxShadow = "none";
+			}
+		});
+
+
+		function resetStyles(card) {
+			if (card) {
+				card.style.border = "2px solid var(--accent)";
+				card.style.boxShadow = "none";
+			}
+		}
+
+		// --- Re-render card layout on window resize ---
+		let resizeTimeout;
+
+		window.addEventListener("resize", () => {
+			clearTimeout(resizeTimeout);
+			resizeTimeout = setTimeout(() => {
+				if (tracks.length > 0) {
+					arrangement();  // ✅ recompute transforms for all cards
+				}
+			}, 200); // waits 200ms after resizing stops
+		});
+
+
 
 		showToast(`Welcome to ${app_name}!`);
 	</script>
