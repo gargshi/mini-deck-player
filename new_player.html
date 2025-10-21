@@ -7,16 +7,25 @@
 	<title>Mini Music Player</title>
 	<style>
 		:root {
-			--bg: #dfdfdf;
-			--panel: #c6c6c6;
-			--muted: #6b7280;
-			--text: #111827;
-			--accent: #38bdf8;
-			--radius: 18px;
-			--nav-btn-background: #e5e7eb;
-			--nav-background: #313131;
-			--nav-text-color: #f8fafc;
+			--bg: #f5f7fa;
+			/* crisp white-blue background */
+			--panel: #ffffff;
+			/* pure clean panels */
+			--muted: #64748b;
+			/* soft slate gray for text hints */
+			--text: #1e293b;
+			/* deep gray-blue, not pure black */
+			--accent: #000000;
+			/* fresh sky-blue accent */
+			--accent-hover: #2563eb;
+			/* deeper blue for hover glow */
+			--radius: 10px;
+			--nav-btn-background: #e2e8f0;
+			--nav-background: #ffffff;
+			--nav-text-color: #1e293b;
+			--toast-bg: #f8fafc;
 		}
+
 
 		body.dark {
 			--bg: #0f172a;
@@ -27,6 +36,7 @@
 			--nav-btn-background: #353535;
 			--nav-background: #0f172a;
 			--nav-text-color: #f8fafc;
+			--toast-bg: #1e293b;
 		}
 
 		* {
@@ -96,17 +106,28 @@
 		}
 
 		.nav-bar .btn {
-			color: var(--text);
-			background: var(--nav-btn-background);
-			border: 1px solid #d1d5db;
-			border-radius: 8px;
-			padding: 8px 14px;
 			cursor: pointer;
-			font-weight: 60;
+			font-weight: 2;
+			transition: all 0.3s ease;
+			border: 1px solid var(--accent);
+			border-radius: 10px;
+			color: var(--text);
+			background: var(--panel);
+			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 		}
 
 		.nav-bar .btn:hover {
-			background: #0e4a98;
+			border: 1px solid var(--accent);
+			box-shadow: 0 10px 10px var(--accent);
+			background-color: var(--bg);
+			color: var(--text);
+		}
+
+		#plus {
+			width: 14px;
+			height: 14px;
+			padding-right: 2px;
+			fill: var(--text);
 		}
 
 		.modal .close:hover {
@@ -275,8 +296,8 @@
 		}
 
 		.controls button {
-			width: 42px;
-			height: 42px;
+			width: 40px;
+			height: 40px;
 			/* ensures perfect circle */
 			display: flex;
 			align-items: center;
@@ -286,7 +307,7 @@
 			color: var(--text);
 			/* Fallback for older browsers: use RGBA similar to --muted (#6b7280 => rgb(107,114,128)) */
 			border: 1px solid rgba(107, 114, 128, 0.25);
-			border-radius: 10%;
+			border-radius: 40px;
 
 			font-size: 16px;
 			cursor: pointer;
@@ -297,20 +318,21 @@
 		.controls button svg {
 			width: 21px;
 			height: 21px;
-			fill: var(--text);
+			fill:white;
 
 		}
 
 		/* hover glow and color shift */
 		.controls button:hover {
-			background-color: rgba(9, 126, 210, 0.588);
+			background-color: var(--accent);
+			opacity: 0.9;
 			color: #fff;
-			box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent);
-			transform: scale(1.05);
+			box-shadow: 0 4px 12px var(--accent);
+			transform: scale(1.07);
 		}
 
 		.controls button:hover svg {
-			fill: #fff;
+			fill: var(--text);
 		}
 
 
@@ -328,9 +350,32 @@
 			gap: 10px;
 		}
 
+		/* === Custom Modern Range Slider === */
 		input[type="range"] {
-			width: 100px;
-			accent-color: var(--accent);
+			-webkit-appearance: none;
+			appearance: none;
+			width: 120px;
+			height: 6px;
+			background: var(--accent);
+			border: 1px solid black;
+			border-radius: 4px;
+			outline: none;
+			cursor: pointer;
+			transition: all 0.3s ease;
+		}
+
+		input[type="range"]::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 14px;
+			height: 14px;
+			background: var(--accent);
+			border: 2px solid var(--text);
+			border-radius: 50%;
+			box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+			transition: all 0.25s ease;
+			
+			/* centers thumb vertically */
 		}
 
 		audio {
@@ -397,29 +442,7 @@
 			transform: translateX(22px);
 		}
 
-		#addFilesbtn {
-			cursor: pointer;
-			font-weight: 2;
-			transition: all 0.3s ease;
-			border: 1px solid #d1d5db;
-			border-radius: 10px;
-			color: var(--text);
-			background: var(--panel);
-			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-		}
 
-		#addFilesbtn:hover {
-			border: 1px solid var(--accent);
-			box-shadow: 0 10px 10px rgba(9, 126, 210, 0.588);
-			background-color: var(--bg);
-			color: var(--text);
-		}
-
-		#plus {
-			width: 14px;
-			height: 14px;
-			fill: var(--text);
-		}
 
 		#no-cover-default {
 			fill: var(--text);
@@ -496,8 +519,35 @@
 		}
 
 		.progress-bar {
-			padding: 10px;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding-right: 10px;
 			border-right: 1px solid var(--accent);
+		}
+
+		.volume-bar {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			border-right: 1px solid var(--accent);
+			padding-right: 10px;
+		}
+
+		.volume-bar svg {
+			width: 20px;
+			height: 20px;
+			fill: var(--text);
+		}
+
+		.volume-bar #volumeLabel {
+			display: flex-box;
+			color: var(--text);
+			cursor: pointer;
+		}
+
+		.volume-bar #v-muted {
+			display: none;
 		}
 
 		/* ====================== Modern Refreshed Settings Modal ====================== */
@@ -551,9 +601,6 @@
 			transform: translateY(0);
 			opacity: 1;
 		}
-
-
-
 
 		/* Close button — simple floating icon */
 		.modal .close {
@@ -703,13 +750,6 @@
 				</span>
 			</label>
 			<input id="fileInput" type="file" accept="audio/*" multiple>
-			<div class="theme-toggle">
-				<span>Dark Mode</span>
-				<label class="switch" for="themeSwitch">
-					<input type="checkbox" id="themeSwitch">
-					<span class="slider"></span>
-				</label>
-			</div>
 			<button class="btn">Help</button>
 			<button class="btn" id="settings">Settings</button>
 		</div>
@@ -736,6 +776,10 @@
 				<div class="setting">
 					<label for="repeat">Repeat</label>
 					<input type="checkbox" id="repeat">
+				</div>
+				<div class="setting">
+					<label for="themeSwitch">Dark Mode</label>
+					<input type="checkbox" id="themeSwitch">
 				</div>
 			</div>
 		</div>
@@ -785,7 +829,18 @@
 				<label id="duration" for="seek">0:00</label>
 			</div>
 			<div class="volume-bar">
-				<label for="volume">Volume</label>
+				<label for="volume" id="volumeLabel">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="v-active">
+						<g data-name="low audio">
+							<path
+								d="M11.46 3c-1 0-1 .13-6.76 4H1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3.7l5.36 3.57A2.54 2.54 0 0 0 14 18.46V5.54A2.54 2.54 0 0 0 11.46 3zM2 9h2v6H2zm10 9.46a.55.55 0 0 1-.83.45L6 15.46V8.54l5.17-3.45a.55.55 0 0 1 .83.45zM16.83 9.17a1 1 0 0 0-1.42 1.42 2 2 0 0 1 0 2.82 1 1 0 0 0 .71 1.71c1.38 0 3.04-3.62.71-5.95z" />
+						</g>
+					</svg>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="v-muted">
+						<path
+							d="m21.29 1.29-3.43 3.44a2.52 2.52 0 0 0-3.8-1.3L8.7 7H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h.59l-4.3 4.29a1 1 0 0 0 1.42 1.42C9.05 16.36 8.29 17 8.7 17c5.7 3.8 5.73 4 6.76 4A2.54 2.54 0 0 0 18 18.46v-11l4.71-4.7a1 1 0 0 0-1.42-1.47zm-6.12 3.8a.55.55 0 0 1 .83.45v1l-6 6v-4zM6 15V9h2c0 6.81.53 6-2 6zm10 3.46a.55.55 0 0 1-.83.45L10 15.46c0-.1-.46.42 6-6.05z" />
+					</svg>
+				</label>
 				<input id="volume" type="range" min="0" max="1" step="0.01" default="0.5">
 			</div>
 			<div class="indicator">
@@ -818,6 +873,7 @@
 		const settings = document.getElementById("settings");
 		const shuffleToggle = document.getElementById("shuffle");
 		const repeatToggle = document.getElementById("repeat");
+		const volume_muter = document.getElementById("volumeLabel");
 
 		const default_music_svg = `<svg id="no-cover-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" xml:space="preserve"><path d="M16 28.458C9.131 28.458 3.542 22.87 3.542 16S9.131 3.542 16 3.542 28.458 9.13 28.458 16 22.869 28.458 16 28.458zm0-23.916C9.682 4.542 4.542 9.682 4.542 16S9.682 27.458 16 27.458 27.458 22.319 27.458 16 22.318 4.542 16 4.542z"/><path d="M11.583 25.185a.488.488 0 0 1-.182-.036.611.611 0 0 1-.128-.07c-3.376-1.714-5.518-5.213-5.518-9.086 0-1.616.373-3.173 1.109-4.625a.5.5 0 1 1 .893.451 9.15 9.15 0 0 0-1.002 4.174 9.209 9.209 0 0 0 5.045 8.24.506.506 0 0 1 .234.655.497.497 0 0 1-.451.297zm13.099-4.265a.5.5 0 0 1-.446-.727 9.14 9.14 0 0 0 1.008-4.186 9.21 9.21 0 0 0-5.045-8.241l.444-.896-.243.438.247-.435a10.207 10.207 0 0 1 5.597 9.135c0 1.623-.376 3.184-1.117 4.639a.498.498 0 0 1-.445.273zM16 11.963a4.037 4.037 0 1 0 0 8.074 4.037 4.037 0 0 0 0-8.074zm0 4.749a.712.712 0 1 1 0-1.425.712.712 0 0 1 0 1.425z"/></svg>`
 		const pause_svg = `<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32" xml:space="preserve"><style></style><path d="M13 28H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6H8v20zM25 28h-6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6h-4v20z"/></svg>`;
@@ -865,6 +921,27 @@
 		document.title = app_name;
 		document.querySelector(".banner").innerHTML = app_name;
 
+
+		function muteVolume() {
+			volume_muter.querySelector("#v-active").style.display = "none";
+			volume_muter.querySelector("#v-muted").style.display = "inline-block";
+		}
+
+		function unmuteVolume() {
+			volume_muter.querySelector("#v-active").style.display = "inline-block";
+			volume_muter.querySelector("#v-muted").style.display = "none";
+		}
+
+		volume_muter.addEventListener("click", () => {
+			if (audio.muted) {
+				audio.muted = false;
+				unmuteVolume();
+			} else {
+				audio.muted = true;
+				muteVolume();
+			}
+		})
+
 		function setTheme() {
 			const themeSwitch = document.getElementById("themeSwitch");
 
@@ -886,12 +963,6 @@
 		}
 		setTheme();
 
-		/*function shuffleTracks(tracks){
-			if (tracks.length > 1){
-				tracks = tracks.sort(() => Math.random() - 0.5);
-			}			
-			//alert("Tracks have been shuffled!");
-		}*/
 		function shuffleArray(array) {
 			const arr = [...array];
 			for (let i = arr.length - 1; i > 0; i--) {
@@ -965,10 +1036,10 @@
 			const shuffleValue = localStorage.getItem("shuffle");
 			if (shuffleValue === "true") {
 				shuffleToggle.checked = true;
-				applyShuffle();				
+				applyShuffle();
 			} else {
 				shuffleToggle.checked = false;
-				disableShuffle();				
+				disableShuffle();
 			}
 		}
 
@@ -999,8 +1070,9 @@
 				};
 
 				// Try to extract embedded album art from metadata
-				track.cover = await extractCoverFromMP3(file);
+				//track.cover = await extractCoverFromMP3(file);
 				track.metadata = await extractMetadataFromAudio(file);
+				track.cover = track.metadata?.cover || null;
 				console.log(track.metadata);
 				newTracks.push(track);
 			}
@@ -1124,7 +1196,7 @@
 					// 🧠 Start from offscreen position for smooth entry
 					card.style.transform = `translateX(${windowWidth}px) rotateY(0deg)`;
 					card.style.transition = "transform 1s ease";
-					stack.appendChild(card);					
+					stack.appendChild(card);
 				}
 			}
 
@@ -1135,7 +1207,7 @@
 
 		function arrangement() {
 			//console.log("Arranging...");
-			const windowWidth = window.innerWidth;			
+			const windowWidth = window.innerWidth;
 			[...stack.children].forEach((card, i) => {
 				card.style.transition = "transform 1s ease";
 				if (i < index) {
@@ -1158,6 +1230,7 @@
 						`;
 					card.style.border = "2px solid var(--accent)";
 					card.style.height = "300px";
+					card.onclick=playPause;
 					enableMarquee(card.querySelector(".name"));
 				}
 				else {
@@ -1411,49 +1484,58 @@
 		}
 
 		function showToast(message) {
+			// Create a container if not already present
+			let container = document.getElementById("toast-container");
+			if (!container) {
+				container = document.createElement("div");
+				container.id = "toast-container";
+				container.style.position = "fixed";
+				container.style.top = "20px";
+				container.style.left = "50%";
+				container.style.transform = "translateX(-60%)";
+				container.style.display = "flex";
+				container.style.flexDirection = "column";
+				container.style.gap = "10px";
+				container.style.zIndex = "9999";
+				container.style.pointerEvents = "none"; // clicks pass through
+				document.body.appendChild(container);
+			}
+
+			// Create the toast element
 			const toast = document.createElement("div");
 			toast.textContent = message;
 
-			// Positioning
-			toast.style.position = "fixed";
-			toast.style.top = "20px";                // slightly below top edge
-			toast.style.left = "50%";               // center horizontally
-			toast.style.transform = "translateX(-50%)"; // true centering
-			toast.style.zIndex = "9999";            // stay above all elements
-
 			// Appearance
-			toast.style.background = "black ";
-			toast.style.border = "2px solid var(--accent)";
+			toast.style.background = "var(--toast-bg)";
 			toast.style.color = "var(--text)";
-			toast.style.padding = "12px 22px";
+			toast.style.padding = "12px 24px";
+			toast.style.border = "2px solid var(--accent)";
 			toast.style.borderRadius = "10px";
 			toast.style.fontFamily = "Segoe UI, sans-serif";
 			toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.25)";
 			toast.style.fontWeight = "6";
 			toast.style.letterSpacing = "0.3px";
+			toast.style.opacity = "1";
+			toast.style.transform = "translateY(-80px)";
+			toast.style.transition = "all 0.5s linear";
+			toast.style.pointerEvents = "auto";
 
-			// Animation
-			toast.style.opacity = "0";
-			toast.style.transform += " translateY(-100px)"; // start slightly above
-			toast.style.transition = "all 2s ease";
+			// Append to container
+			container.appendChild(toast);
 
-			document.body.appendChild(toast);
-
-			// Trigger fade-in + slide-down
+			// Animate in
 			requestAnimationFrame(() => {
-				toast.style.opacity = "1";
-				toast.style.transform = "translate(-50%, 0)";
+				toast.style.transform = "translateY(-5px)";
 			});
 
-			// Auto remove
+			// Animate out after delay
 			setTimeout(() => {
-				toast.style.opacity = "1";
-				toast.style.transform = "translate(-50%, -100px)";
+				toast.style.transform = "translateY(-80px)";
 				setTimeout(() => toast.remove(), 1000);
 			}, 5000);
 		}
-		showToast(`Welcome to ${app_name}!`);
 
+		showToast(`Welcome to ${app_name}!`);
 	</script>
 </body>
 
