@@ -2,1770 +2,2090 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Mini Music Player</title>
-	<style>
-		:root {
-			--bg: #f5f7fa;
-			/* crisp white-blue background */
-			--panel: #ffffff;
-			/* pure clean panels */
-			--muted: #64748b;
-			/* soft slate gray for text hints */
-			--text: #1e293b;
-			/* deep gray-blue, not pure black */
-			--accent: #000000;
-			/* fresh sky-blue accent */
-			--accent-hover: #2563eb;
-			/* deeper blue for hover glow */
-			--radius: 10px;
-			--nav-btn-background: #e2e8f0;
-			--nav-background: #ffffff;
-			--nav-text-color: #1e293b;
-			--toast-bg: #f8fafc;
-		}
-
-
-		body.dark {
-			--bg: #0f172a;
-			--panel: #1e293b;
-			--muted: #94a3b8;
-			--text: #f8fafc;
-			--accent: #eb7b25;
-			--nav-btn-background: #353535;
-			--nav-background: #0f172a;
-			--nav-text-color: #f8fafc;
-			--toast-bg: #1e293b;
-		}
-
-		* {
-			box-sizing: border-box;
-			margin: 0;
-			padding: 0;
-		}
-
-		body {
-			font-family: 'Arial', system-ui, sans-serif;
-			background: var(--bg);
-			color: var(--text);
-			height: 100vh;
-			display: flex;
-			flex-direction: column;
-			overflow: hidden;
-		}
-
-		/* ======================== STACK ======================== */
-		main {
-			flex: 1;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			perspective: 1000px;
-			overflow: hidden;
-			position: relative;
-			/*background: linear-gradient(10deg, var(--accent) 0%, var(--panel) 100%);*/
-		}
-
-		.nav-bar {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			background: var(--nav-background);
-			color: var(--nav-text-color);
-			padding: 0.8rem 1.5rem;
-			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-			position: sticky;
-			top: 0;
-			z-index: 10;
-			width: 100%;
-			border-bottom: var(--accent) 1px solid;
-			color: var(--nav-text-color);
-		}
-
-		.nav-bar .left-side-items {
-			display: flex;
-			align-items: center;
-			gap: 1rem;
-		}
-
-		.banner {
-			font-size: 1.2rem;
-			font-weight: 5;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-		}
-
-		.nav-bar .right-side-items {
-			display: flex;
-			align-items: center;
-			gap: 1.2rem;
-
-		}
-
-		.nav-bar input[type="file"] {
-			display: none;
-		}
-
-		.nav-bar .btn {
-			cursor: pointer;
-			font-weight: 2;
-			transition: all 0.3s ease;
-			border: 1px solid var(--accent);
-			border-radius: 10px;
-			color: var(--text);
-			background: var(--panel);
-			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-		}
-
-		.nav-bar .btn:hover {
-			border: 1px solid var(--accent);
-			box-shadow: 0 10px 10px var(--accent);
-			background-color: var(--bg);
-			color: var(--text);
-		}
-
-		#plus {
-			width: 14px;
-			height: 14px;
-			padding-right: 2px;
-			fill: var(--text);
-		}
-
-		.modal .close:hover {
-			transform: scale(1.1);
-			box-shadow: 0 0 10px var(--accent);
-		}
-
-
-		.btn {
-			border: 1px solid #d1d5db;
-			background: #e5e7eb;
-			border-radius: 8px;
-			padding: 8px 14px;
-			cursor: pointer;
-			font-weight: 600;
-		}
-
-		.btn:hover {
-			background: #dbeafe;
-		}
-
-		.stack {
-			position: absolute;
-			top: 0;
-			/* ensure no offset */
-			transform: translateY(0);
-			display: flex;
-			align-items: center;
-			width: 100%;
-			height: 100%;
-			border: 1px solid var(--accent);
-			z-index: 3;
-			transform-style: preserve-3d;
-		}
-
-		.hint-banner {
-			position: absolute;
-
-			text-align: center;
-			align-items: center;
-			justify-content: center;
-			width: 50%;
-
-			z-index: 2;
-
-			font-size: 1.2rem;
-			font-weight: 5;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			text-align: center;
-			color: var(--text);
-			opacity: 0.5;
-
-			/*transform: translateX(50%);*/
-			transition: all 1s ease;
-			border: 1px solid var(--accent);
-			padding-bottom: 20px;
-		}
-
-		.card {
-			position: absolute;
-			width: 200px;
-			height: 300px;
-			border-radius: var(--radius);
-			background: var(--panel);
-			display: flex;
-			flex-direction: column;
-			gap: 10px;
-			justify-content: top;
-			align-items: center;
-			text-align: center;
-			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-			border: 1px solid #d1d5db;
-			transition: all 1s ease;
-			cursor: pointer;
-			overflow: hidden;
-		}
-
-
-
-		.card.cover-image {
-			background-color: gray;
-			height: 100px;
-			width: 100px;
-		}
-
-		.card .cover-image img,
-		.card .cover-image svg {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-		}
-
-		.card .name {
-			font-weight: 10;
-			font-size: 15px;
-			margin-bottom: 4px;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			padding: 5px;
-		}
-
-		.card .size {
-			font-size: 10px;
-			color: var(--muted);
-		}
-
-		.card .artist {
-			font-size: 10px;
-			color: var(--muted);
-		}
-
-		.card.active {
-			z-index: 10;
-			transform: rotateY(0deg) translateZ(10px) scale(1.05);
-			/*box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);*/
-			border: 2px solid var(--accent);
-		}
-
-		/* ======================== PLAYER ======================== */
-		.player {
-			position: sticky;
-			bottom: 0;
-			background: var(--panel);
-			border-top: 1px solid var(--accent);
-			box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.08);
-			display: grid;
-			grid-template-columns: 1fr auto 1fr;
-			align-items: center;
-			padding: 10px 20px;
-		}
-
-		.left {
-			display: flex;
-			align-items: center;
-			gap: 12px;
-		}
-
-		.cover {
-			width: 56px;
-			height: 56px;
-			background-color: var(--panel);
-			border: 1px solid #d1d5db;
-			color: var(--text);
-			border-radius: 10px;
-			display: grid;
-			place-items: center;
-			font-weight: bold;
-		}
-
-		.cover img {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-		}
-
-		.info {
-			display: flex;
-			flex-direction: column;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-		}
-
-		.title {
-			font-size: 15px;
-			font-weight: 600;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-		}
-
-		.artist {
-			font-size: 13px;
-			color: var(--muted);
-		}
-
-		.controls {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 16px;
-		}
-
-		.controls button {
-			width: 40px;
-			height: 40px;
-			/* ensures perfect circle */
-			display: flex;
-			align-items: center;
-			justify-content: center;
-
-			background: var(--accent);
-			color: var(--text);
-			/* Fallback for older browsers: use RGBA similar to --muted (#6b7280 => rgb(107,114,128)) */
-			border: 1px solid rgba(107, 114, 128, 0.25);
-			border-radius: 40px;
-
-			font-size: 16px;
-			cursor: pointer;
-			transition: all 0.3s ease;
-			box-shadow: 0 2px 6px rgba(48, 49, 49, 0.681);
-		}
-
-		.controls button svg {
-			width: 21px;
-			height: 21px;
-			fill: white;
-
-		}
-
-		/* hover glow and color shift */
-		.controls button:hover {
-			background-color: var(--accent);
-			opacity: 0.9;
-			color: #fff;
-			box-shadow: 0 4px 12px var(--accent);
-			transform: scale(1.07);
-		}
-
-		.controls button:hover svg {
-			fill: var(--text);
-		}
-
-
-		/* active press feedback */
-		.controls button:active {
-			transform: scale(0.95);
-			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-		}
-
-
-		.right {
-			display: flex;
-			align-items: center;
-			justify-content: flex-end;
-			gap: 10px;
-		}
-
-		/* === Custom Modern Range Slider === */
-		input[type="range"] {
-			-webkit-appearance: none;
-			appearance: none;
-			width: 120px;
-			height: 6px;
-			background: var(--accent);
-			border: 1px solid black;
-			border-radius: 4px;
-			outline: none;
-			cursor: pointer;
-			transition: all 0.3s ease;
-		}
-
-		input[type="range"]::-webkit-slider-thumb {
-			-webkit-appearance: none;
-			appearance: none;
-			width: 14px;
-			height: 14px;
-			background: var(--accent);
-			border: 2px solid var(--text);
-			border-radius: 50%;
-			box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
-			transition: all 0.25s ease;
-
-			/* centers thumb vertically */
-		}
-
-		audio {
-			display: none;
-		}
-
-
-		.theme-toggle {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			font-weight: 600;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			color: var(--nav-text-color);
-		}
-
-		.theme-toggle span {
-			-webkit-user-select: none;
-			user-select: none;
-		}
-
-		.switch {
-			position: relative;
-			display: inline-block;
-			width: 48px;
-			height: 26px;
-		}
-
-		.switch input {
-			opacity: 0;
-			width: 0;
-			height: 0;
-		}
-
-		.slider {
-			position: absolute;
-			cursor: pointer;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background-color: #ccc;
-			transition: 0.4s;
-			border-radius: 26px;
-		}
-
-		.slider:before {
-			position: absolute;
-			content: "";
-			height: 18px;
-			width: 18px;
-			left: 4px;
-			bottom: 4px;
-			background-color: white;
-			transition: 0.4s;
-			border-radius: 50%;
-		}
-
-		input:checked+.slider {
-			background-color: var(--accent);
-		}
-
-		input:checked+.slider:before {
-			transform: translateX(22px);
-		}
-
-
-
-		#no-cover-default {
-			fill: var(--text);
-		}
-
-		.marquee {
-			position: relative;
-			overflow: hidden;
-			white-space: nowrap;
-			width: 180px;
-			/* fits nicely within 200px card */
-		}
-
-		.marquee span {
-			display: inline-block;
-			padding-left: 100%;
-			animation: marquee-scroll 10s linear infinite;
-		}
-
-		@keyframes marquee-scroll {
-			0% {
-				transform: translateX(0);
-			}
-
-			100% {
-				transform: translateX(-100%);
-			}
-		}
-
-		/* Disable animation if text fits */
-		.marquee.no-scroll span {
-			animation: none;
-			transform: translateX(0);
-			padding-left: 0;
-		}
-
-		.deck-icon {
-			display: inline-block;
-			width: 16px;
-			height: 16px;
-			border-radius: 50%;
-			background: radial-gradient(circle at 30% 30%, #4b5563 20%, #111827 90%);
-			margin-right: 6px;
-			box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.2);
-		}
-
-		.settings-menu {
-			position: fixed;
-			font-weight: 2;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			display: flex;
-			flex-direction: column;
-			gap: 10px;
-			margin-top: 10%;
-			margin-left: 5%;
-			justify-content: left;
-		}
-
-		.modal-banner {
-			font-size: 1.2rem;
-			font-weight: 5;
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			width: fit-content;
-			border-bottom: var(--accent) 1px solid;
-		}
-
-		.settings-menu.setting {
-			display: flex;
-			gap: 10px;
-			align-items: center;
-		}
-
-		.progress-bar {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			padding-right: 10px;
-			border-right: 1px solid var(--accent);
-		}
-
-		.volume-bar {
-			display: flex;
-			align-items: center;
-			gap: 5px;
-			border-right: 1px solid var(--accent);
-			padding-right: 10px;
-		}
-
-		.volume-bar svg {
-			width: 20px;
-			height: 20px;
-			fill: var(--text);
-		}
-
-		.volume-bar #volumeLabel {
-			display: flex-box;
-			color: var(--text);
-			cursor: pointer;
-		}
-
-		.volume-bar #v-muted {
-			display: none;
-		}
-
-		/* ====================== Modern Refreshed Settings Modal ====================== */
-		.modal {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background: rgba(0, 0, 0, 0.35);
-			-webkit-backdrop-filter: blur(10px);
-			backdrop-filter: blur(10px);
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			z-index: 100;
-			opacity: 0;
-			visibility: hidden;
-			transform: scale(0.97);
-			transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s ease;
-		}
-
-		.modal.modal-open {
-			opacity: 1;
-			visibility: visible;
-			transform: scale(1);
-		}
-
-		/* inner box */
-		.modal-content {
-			color: var(--text);
-			position: relative;
-			background: color-mix(in srgb, var(--panel) 85%, var(--bg) 15%);
-			border: 1px solid var(--accent), transparent;
-			border-radius: 10px;
-			padding: 40px 40px 30px;
-			/* more breathing space on top */
-			width: 90%;
-			height: 80%;
-			max-width: 600px;
-			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-			transform: translateY(25px);
-			opacity: 0;
-			transition: transform 0.4s ease, opacity 0.4s ease;
-			display: flex;
-			flex-direction: column;
-			align-items: stretch;
-		}
-
-		.modal.modal-open .modal-content {
-			transform: translateY(0);
-			opacity: 1;
-		}
-
-		/* Close button — simple floating icon */
-		.modal .close {
-			width: 36px;
-			height: 36px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 24px;
-			font-weight: bold;
-			color: var(--accent);
-			background: transparent;
-			border: 1px solid var(--accent);
-			border-radius: 50%;
-			cursor: pointer;
-			transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
-		}
-
-		/* Close button hover feedback */
-		.modal .close:hover {
-			background: var(--accent);
-			color: var(--panel);
-			transform: scale(1.1);
-		}
-
-		.modal-header {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			/* left-right alignment */
-			margin-bottom: 1.2rem;
-			padding-bottom: 0.5rem;
-			border-bottom: 1px solid var(--accent);
-			/* subtle separator line */
-		}
-
-		/* header text */
-		.modal-bann {
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			font-size: 1.6rem;
-			font-weight: 600;
-			color: var(--text);
-		}
-
-		/* settings menu container */
-		.settings-menu {
-			display: flex;
-			flex-direction: column;
-			gap: 1rem;
-			margin-top: 0rem;
-			margin-left: 0rem;
-			z-index: 1;
-			position: relative;
-			padding-left: 0;
-
-		}
-
-		/* each setting item */
-		.setting {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			padding: 12px 18px;
-			width: 100%;
-			border-radius: 12px;
-			background: color-mix(in srgb, var(--panel) 90%, var(--accent) 5%);
-			box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.05);
-			transition: background 0.3s ease, box-shadow 0.3s ease;
-		}
-
-		.setting:hover {
-			background: color-mix(in srgb, var(--accent) 10%, var(--panel) 85%);
-			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-			border: 1px solid var(--accent);
-		}
-
-		.setting label {
-			font-size: 1rem;
-			font-weight: 500;
-			color: var(--text);
-		}
-
-		/* nice toggle styling */
-		.setting input[type="checkbox"] {
-			width: 44px;
-			height: 22px;
-			-webkit-appearance: none;
-			appearance: none;
-			background: #ccc;
-			border-radius: 20px;
-			position: relative;
-			cursor: pointer;
-			transition: all 0.3s ease;
-		}
-
-		.setting input[type="checkbox"]::before {
-			content: "";
-			position: absolute;
-			top: 3px;
-			left: 3px;
-			width: 16px;
-			height: 16px;
-			background: #fff;
-			border-radius: 50%;
-			transition: transform 0.3s ease;
-		}
-
-		.setting input[type="checkbox"]:checked {
-			background: var(--accent);
-		}
-
-		.setting input[type="checkbox"]:checked::before {
-			transform: translateX(22px);
-		}
-
-		.indicator {
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			font-size: 1rem;
-			color: var(--text);
-		}
-
-		#dot-visualizer {
-			position: absolute;
-			/*bottom: 80px;*/
-			top: 0;
-			/* just above player bar */
-			left: 0;
-			width: 100%;
-			/*height: 120px;*/
-			pointer-events: none;
-			/* so clicks pass through */
-			z-index: 100;
-			opacity: 0.7;
-		}
-
-		.border-react {
-			position: absolute;
-			inset: 0;
-			pointer-events: none;
-			border-style: solid;
-			border-width: 2px;
-			border-color: transparent;
-			border-radius: var(--radius);
-			transition: border-width 0.06s ease, border-color 0.06s ease;
-		}
-
-		body,
-		.modal-content,
-		.player,
-		.card {
-			transition: background 0.5s ease, color 0.5s ease, border 0.5s ease;
-		}
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Music Player</title>
+    <style>
+        @media (max-width: 768px) {
+            body {
+                font-size: 0.8rem;
+            }
+
+            .nav-bar {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+                padding: 0.5rem 1rem;
+            }
+
+            .nav-bar .right-side-items {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .stack {
+                height: 240px;
+            }
+
+            .card {
+                width: 50px;
+                height: 100px;
+                border-radius: 12px;
+                font-size: 0.9rem;
+            }
+
+            .card.active {
+                width: 60px;
+                height: 110px;
+                border-radius: 12px;
+                font-size: 1rem;
+            }
+
+            .hint-banner {
+                font-size: 1rem;
+                top: 5%;
+            }
+
+            .player {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 0.5rem 1rem;
+                min-width: 0;
+            }
+
+            .player .left {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+                min-width: 0;
+                overflow: hidden;
+            }
+
+            .player .right {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+
+            .controls button {
+                width: 36px;
+                height: 36px;
+            }
+
+            .cover {
+                width: 50px;
+                height: 50px;
+            }
+
+            .player .info {
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                /* 🧠 critical for truncation */
+                flex: 1;
+                overflow: hidden;
+                height: 42px;
+                /* keeps consistent spacing */
+            }
+
+            .player .title,
+            .player .artist {
+                display: block;
+                width: 100%;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 1.3;
+                max-width: calc(100vw - 4rem);
+                /* ✅ ensures consistent clipping */
+                margin: 0 auto;
+                /* ✅ keeps centered look */
+                font-size: 1rem;
+            }
+        }
+
+
+
+        :root {
+            --bg: #f5f7fa;
+            /* crisp white-blue background */
+            --panel: #ffffff;
+            /* pure clean panels */
+            --muted: #64748b;
+            /* soft slate gray for text hints */
+            --text: #1e293b;
+            /* deep gray-blue, not pure black */
+            --accent: #000000;
+            /* fresh sky-blue accent */
+            --accent-hover: #2563eb;
+            /* deeper blue for hover glow */
+            --radius: 10px;
+            --nav-btn-background: #e2e8f0;
+            --nav-background: #ffffff;
+            --nav-text-color: #1e293b;
+            --toast-bg: #f8fafc;
+        }
+
+
+        body.dark {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --muted: #94a3b8;
+            --text: #f8fafc;
+            --accent: #eb7b25;
+            --nav-btn-background: #353535;
+            --nav-background: #0f172a;
+            --nav-text-color: #f8fafc;
+            --toast-bg: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ======================== STACK ======================== */
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+            overflow: hidden;
+            position: relative;
+            /*background: linear-gradient(10deg, var(--accent) 0%, var(--panel) 100%);*/
+        }
+
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--nav-background);
+            color: var(--nav-text-color);
+            padding: 0.8rem 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            width: 100%;
+            border-bottom: var(--accent) 1px solid;
+            color: var(--nav-text-color);
+        }
+
+        .nav-bar .left-side-items {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .banner {
+            font-size: 1.2rem;
+            font-weight: 5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .nav-bar .right-side-items {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+
+        }
+
+        .nav-bar input[type="file"] {
+            display: none;
+        }
+
+        .nav-bar .btn {
+            cursor: pointer;
+            font-weight: 2;
+            transition: all 0.3s ease;
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            color: var(--text);
+            background: var(--panel);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-bar .btn:hover {
+            border: 1px solid var(--accent);
+            box-shadow: 0 10px 10px var(--accent);
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        #plus {
+            width: 14px;
+            height: 14px;
+            padding-right: 2px;
+            fill: var(--text);
+        }
+
+        .modal .close:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+
+        .btn {
+            border: 1px solid #d1d5db;
+            background: #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: #dbeafe;
+        }
+
+        .stack {
+            position: absolute;
+            top: 0;
+            /* ensure no offset */
+            transform: translateY(0);
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            border: 1px solid var(--accent);
+            z-index: 3;
+            transform-style: preserve-3d;
+        }
+
+        .hint-banner {
+            position: absolute;
+
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+            width: 50%;
+
+            z-index: 2;
+
+            font-size: 1.2rem;
+            font-weight: 5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            color: var(--text);
+            opacity: 0.5;
+
+            /*transform: translateX(50%);*/
+            transition: all 1s ease;
+            border: 1px solid var(--accent);
+            padding-bottom: 20px;
+        }
+
+        .card {
+            position: absolute;
+            width: 200px;
+            height: 300px;
+            border-radius: var(--radius);
+            background: var(--panel);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: top;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #d1d5db;
+            transition: all 1s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+
+
+        .card.cover-image {
+            background-color: gray;
+            height: 100px;
+            width: 100px;
+        }
+
+        .card .cover-image img,
+        .card .cover-image svg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card .name {
+            font-weight: 10;
+            font-size: 15px;
+            margin-bottom: 4px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 5px;
+        }
+
+        .card .size {
+            font-size: 10px;
+            color: var(--muted);
+        }
+
+        .card .artist {
+            font-size: 10px;
+            color: var(--muted);
+        }
+
+        .card.active {
+            z-index: 10;
+            transform: rotateY(0deg) translateZ(10px) scale(1.05);
+            /*box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);*/
+            border: 2px solid var(--accent);
+        }
+
+        /* ======================== PLAYER ======================== */
+        .player {
+            position: sticky;
+            bottom: 0;
+            background: var(--panel);
+            border-top: 1px solid var(--accent);
+            box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            min-width: 0;
+        }
+
+        .player .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            /* 🧠 allows children to shrink */
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .cover {
+            width: 56px;
+            height: 56px;
+            background-color: var(--panel);
+            border: 1px solid #d1d5db;
+            color: var(--text);
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-weight: bold;
+        }
+
+        .cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player .info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            /* 🧠 critical for truncation */
+            flex: 1;
+            overflow: hidden;
+            height: 42px;
+            /* keeps consistent spacing */
+            width: 50%;
+        }
+
+        .player .title,
+        .player .artist {
+            display: block;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+
+        .player .title {
+            font-weight: 600;
+            font-size: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .player .artist {
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        .controls button {
+            width: 40px;
+            height: 40px;
+            /* ensures perfect circle */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: var(--accent);
+            color: var(--text);
+            /* Fallback for older browsers: use RGBA similar to --muted (#6b7280 => rgb(107,114,128)) */
+            border: 1px solid rgba(107, 114, 128, 0.25);
+            border-radius: 40px;
+
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(48, 49, 49, 0.681);
+        }
+
+        .controls button svg {
+            width: 21px;
+            height: 21px;
+            fill: white;
+        }
+
+        /* hover glow and color shift */
+        .controls button:hover {
+            background-color: var(--accent);
+            opacity: 0.9;
+            color: #fff;
+            box-shadow: 0 4px 12px var(--accent);
+            transform: scale(1.07);
+        }
+
+        .controls button:hover svg {
+            fill: var(--text);
+        }
+
+
+        /* active press feedback */
+        .controls button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+
+        .right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* === Custom Modern Range Slider === */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 120px;
+            height: 6px;
+            background: var(--accent);
+            border: 1px solid black;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent);
+            border: 2px solid var(--text);
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+            transition: all 0.25s ease;
+
+            /* centers thumb vertically */
+        }
+
+        audio {
+            display: none;
+        }
+
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--nav-text-color);
+        }
+
+        .theme-toggle span {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--accent);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(22px);
+        }
+
+
+
+        #no-cover-default {
+            fill: var(--text);
+        }
+
+        .marquee {
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 180px;
+            /* fits nicely within 200px card */
+        }
+
+        .marquee span {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee-scroll 10s linear infinite;
+        }
+
+        @keyframes marquee-scroll {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        /* Disable animation if text fits */
+        .marquee.no-scroll span {
+            animation: none;
+            transform: translateX(0);
+            padding-left: 0;
+        }
+
+        .deck-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #4b5563 20%, #111827 90%);
+            margin-right: 6px;
+            box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.2);
+        }
+
+        .settings-menu {
+            position: fixed;
+            font-weight: 2;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10%;
+            margin-left: 5%;
+            justify-content: left;
+        }
+
+        .modal-banner {
+            font-size: 1.2rem;
+            font-weight: 5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: fit-content;
+            border-bottom: var(--accent) 1px solid;
+        }
+
+        .settings-menu.setting {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .progress-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-right: 10px;
+            width: 100%;
+        }
+
+        .volume-bar {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding-right: 10px;
+        }
+
+        .volume-bar svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text);
+        }
+
+        .volume-bar #volumeLabel {
+            display: flex-box;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .volume-bar #v-muted {
+            display: none;
+        }
+
+        /* ====================== Modern Refreshed Settings Modal ====================== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.97);
+            transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s ease;
+        }
+
+        .modal.modal-open {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+
+        /* inner box */
+        .modal-content {
+            color: var(--text);
+            position: relative;
+            background: color-mix(in srgb, var(--panel) 85%, var(--bg) 15%);
+            border: 1px solid var(--accent), transparent;
+            border-radius: 10px;
+            padding: 40px 40px 30px;
+            /* more breathing space on top */
+            width: 90%;
+            height: 80%;
+            max-width: 600px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            transform: translateY(25px);
+            opacity: 0;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .modal.modal-open .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Close button — simple floating icon */
+        .modal .close {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent);
+            background: transparent;
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+        }
+
+        /* Close button hover feedback */
+        .modal .close:hover {
+            background: var(--accent);
+            color: var(--panel);
+            transform: scale(1.1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            /* left-right alignment */
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--accent);
+            /* subtle separator line */
+        }
+
+        /* header text */
+        .modal-bann {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* settings menu container */
+        .settings-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 0rem;
+            margin-left: 0rem;
+            z-index: 1;
+            position: relative;
+            padding-left: 0;
+
+        }
+
+        /* each setting item */
+        .setting {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            width: 100%;
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--panel) 90%, var(--accent) 5%);
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.05);
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .setting:hover {
+            background: color-mix(in srgb, var(--accent) 10%, var(--panel) 85%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--accent);
+        }
+
+        .setting label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        /* nice toggle styling */
+        .setting input[type="checkbox"] {
+            width: 44px;
+            height: 22px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ccc;
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .setting input[type="checkbox"]::before {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .setting input[type="checkbox"]:checked {
+            background: var(--accent);
+        }
+
+        .setting input[type="checkbox"]:checked::before {
+            transform: translateX(22px);
+        }
+
+        .indicator {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        #dot-visualizer {
+            position: absolute;
+            /*bottom: 80px;*/
+            top: 0;
+            /* just above player bar */
+            left: 0;
+            width: 100%;
+            /*height: 120px;*/
+            pointer-events: none;
+            /* so clicks pass through */
+            z-index: 100;
+            opacity: 0.7;
+        }
+
+        .border-react {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-style: solid;
+            border-width: 2px;
+            border-color: transparent;
+            border-radius: var(--radius);
+            transition: border-width 0.06s ease, border-color 0.06s ease;
+        }
+
+        .player {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress {
+            position: relative;
+            width: 100%;
+            display: flex;
+        }
+
+        .three-panes {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .three-panes>.left,
+        .three-panes>.controls,
+        .three-panes>.right {
+            flex: 1;
+            /* each takes equal width */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* centers content within each section */
+        }
+
+        .three-panes>.left {
+            justify-content: flex-start;
+        }
+
+        #seek {
+            width: 100%;
+        }
+
+
+
+
+
+
+
+
+
+
+
+        body,
+        .modal-content,
+        .player,
+        .card {
+            transition: background 0.5s ease, color 0.5s ease, border 0.5s ease;
+        }
+    </style>
 </head>
 
 <body>
-	<div class="nav-bar">
-		<div class="left-side-items">
-			<div class="banner">
-				<!-- <span class="deck-icon"></span> -->
-				miniDeck
-			</div>
-		</div>
-		<div class="right-side-items">
-			<label for="fileInput" class="btn" id="addFilesbtn">
-				<span>
-					<svg id="plus" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" xml:space="preserve">
-						<path
-							d="M128 63.954c0 2.006-.797 3.821-2.136 5.127-1.308 1.337-3.125 2.133-5.166 2.133H71.302v49.356c0 4.012-3.284 7.292-7.302 7.292-2.009 0-3.827-.828-5.166-2.134-1.308-1.337-2.136-3.152-2.136-5.159V71.214H7.302c-4.05 0-7.302-3.248-7.302-7.26 0-2.006.797-3.853 2.136-5.159a7.279 7.279 0 0 1 5.166-2.134h49.395V7.306c0-4.012 3.284-7.26 7.302-7.26 2.009 0 3.827.828 5.166 2.133a7.238 7.238 0 0 1 2.136 5.127v49.356h49.395A7.276 7.276 0 0 1 128 63.954z" />
-					</svg>
-					Add Files
-				</span>
-			</label>
-			<input id="fileInput" type="file" accept="audio/*" multiple>
-			<button class="btn">Help</button>
-			<button class="btn" id="settings">Settings</button>
-		</div>
-	</div>
-
-	<main>
-		<div class="hint-banner">
-			<span>Drag and drop or click Add Files to add files</span>
-		</div>
-		<div class="stack" id="stack">
-
-		</div>
-		<!-- Dot Pulse Visualizer -->
-		<canvas id="dot-visualizer"></canvas>
-	</main>
-	<div class="modal" id="settingsModal">
-		<div class="modal-content">
-			<div class="modal-header">
-				<div class="modal-bann">Settings</div>
-				<span class="close">&times;</span>
-			</div>
-			<div class="settings-menu">
-				<div class="setting">
-					<label for="shuffle">Shuffle</label>
-					<input type="checkbox" id="shuffle">
-				</div>
-				<div class="setting">
-					<label for="repeat">Repeat</label>
-					<input type="checkbox" id="repeat">
-				</div>
-				<div class="setting">
-					<label for="themeSwitch">Dark Mode</label>
-					<input type="checkbox" id="themeSwitch">
-				</div>
-			</div>
-		</div>
-	</div>
-
-
-	<div class="player">
-
-		<div class="left">
-			<div class="cover" id="cover">♪</div>
-			<div class="info">
-				<div class="title" id="title">No track playing</div>
-				<div class="artist" id="artist">—</div>
-			</div>
-		</div>
-
-		<div class="controls">
-			<button title="Previous button" id="prevBtn">
-				<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32"
-					xml:space="preserve">
-					<style></style>
-					<path
-						d="M20 28a1 1 0 0 1-.521-.146l-18-11a1.002 1.002 0 0 1 0-1.708l18-11A.999.999 0 0 1 21 5v6.11a1 1 0 0 1-.479.854L13.918 16l6.603 4.035c.297.182.479.506.479.854V27a1 1 0 0 1-1 1zM3.918 16 19 25.217V21.45l-7.521-4.596a1 1 0 0 1 0-1.707L19 10.55V6.783L3.918 16z" />
-					<path
-						d="M30 28a1 1 0 0 1-.521-.146l-18-11a1.002 1.002 0 0 1 0-1.708l18-11A.999.999 0 0 1 31 5v22a1 1 0 0 1-1 1zM13.918 16 29 25.217V6.783L13.918 16z" />
-				</svg>
-			</button>
-			<button title="Play button" id="playPauseBtn">
-				<svg version="1.1" id="play" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32"
-					xml:space="preserve">
-					<path
-						d="M7 28a.999.999 0 0 1-1-1V5a1 1 0 0 1 1.521-.854l18 11a1.001 1.001 0 0 1 0 1.708l-18 11A1 1 0 0 1 7 28zM8 6.783v18.434L23.082 16 8 6.783z" />
-				</svg>
-			</button>
-			<button title="Next button" id="nextBtn"><svg version="1.1" id="Layer_2" xmlns="http://www.w3.org/2000/svg"
-					x="0" y="0" viewBox="0 0 32 32" xml:space="preserve">
-					<style></style>
-					<path
-						d="M12 28a1 1 0 0 1-1-1v-6.111c0-.348.182-.672.479-.854L18.082 16l-6.603-4.035A1.001 1.001 0 0 1 11 11.11V5a1 1 0 0 1 1.521-.854l18 11a1.002 1.002 0 0 1 0 1.708l-18 11A1 1 0 0 1 12 28zm1-6.55v3.767L28.082 16 13 6.783v3.767l7.521 4.596a1.001 1.001 0 0 1 0 1.708L13 21.45z" />
-					<path
-						d="M2 28a1 1 0 0 1-1-1V5a1 1 0 0 1 1.521-.854l18 11a1.002 1.002 0 0 1 0 1.708l-18 11A1 1 0 0 1 2 28zM3 6.783v18.434L18.082 16 3 6.783z" />
-				</svg>
-			</button>
-		</div>
-
-		<div class="right">
-			<div class="progress-bar">
-				<label id="currentTime" for="seek">0:00</label>
-				<input id="seek" type="range" min="0" max="1000" value="0" step="1">
-				<label id="duration" for="seek">0:00</label>
-			</div>
-			<div class="volume-bar">
-				<label for="volume" id="volumeLabel">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="v-active">
-						<g data-name="low audio">
-							<path
-								d="M11.46 3c-1 0-1 .13-6.76 4H1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3.7l5.36 3.57A2.54 2.54 0 0 0 14 18.46V5.54A2.54 2.54 0 0 0 11.46 3zM2 9h2v6H2zm10 9.46a.55.55 0 0 1-.83.45L6 15.46V8.54l5.17-3.45a.55.55 0 0 1 .83.45zM16.83 9.17a1 1 0 0 0-1.42 1.42 2 2 0 0 1 0 2.82 1 1 0 0 0 .71 1.71c1.38 0 3.04-3.62.71-5.95z" />
-						</g>
-					</svg>
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="v-muted">
-						<path
-							d="m21.29 1.29-3.43 3.44a2.52 2.52 0 0 0-3.8-1.3L8.7 7H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h.59l-4.3 4.29a1 1 0 0 0 1.42 1.42C9.05 16.36 8.29 17 8.7 17c5.7 3.8 5.73 4 6.76 4A2.54 2.54 0 0 0 18 18.46v-11l4.71-4.7a1 1 0 0 0-1.42-1.47zm-6.12 3.8a.55.55 0 0 1 .83.45v1l-6 6v-4zM6 15V9h2c0 6.81.53 6-2 6zm10 3.46a.55.55 0 0 1-.83.45L10 15.46c0-.1-.46.42 6-6.05z" />
-					</svg>
-				</label>
-				<input id="volume" type="range" min="0" max="1" step="0.01" default="0.5">
-			</div>
-			<div class="indicator">
-				<div>REP <span id="rep_status">--</span></div>
-				<div>SHFL <span id="shfl_status">--</span></div>
-			</div>
-
-		</div>
-	</div>
-
-	<audio id="audio" preload="metadata"></audio>
-
-
-	<script defer>
-		const app_name = "miniDeck";
-		const fileInput = document.getElementById("fileInput");
-		const stack = document.getElementById("stack");
-		const titleEl = document.getElementById("title");
-		const artistEl = document.getElementById("artist");
-		const coverEl = document.getElementById("cover");
-		const playPauseBtn = document.getElementById("playPauseBtn");
-		const nextBtn = document.getElementById("nextBtn");
-		const prevBtn = document.getElementById("prevBtn");
-		const audio = document.getElementById("audio");
-		const seek = document.getElementById("seek");
-		const currentTimeEl = document.getElementById("currentTime");
-		const durationEl = document.getElementById("duration");
-		const volume = document.getElementById("volume");
-		const settingsModal = document.getElementById("settingsModal");
-		const settings = document.getElementById("settings");
-		const shuffleToggle = document.getElementById("shuffle");
-		const repeatToggle = document.getElementById("repeat");
-		const volume_muter = document.getElementById("volumeLabel");
-
-		const default_music_svg = `<svg id="no-cover-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" xml:space="preserve"><path d="M16 28.458C9.131 28.458 3.542 22.87 3.542 16S9.131 3.542 16 3.542 28.458 9.13 28.458 16 22.869 28.458 16 28.458zm0-23.916C9.682 4.542 4.542 9.682 4.542 16S9.682 27.458 16 27.458 27.458 22.319 27.458 16 22.318 4.542 16 4.542z"/><path d="M11.583 25.185a.488.488 0 0 1-.182-.036.611.611 0 0 1-.128-.07c-3.376-1.714-5.518-5.213-5.518-9.086 0-1.616.373-3.173 1.109-4.625a.5.5 0 1 1 .893.451 9.15 9.15 0 0 0-1.002 4.174 9.209 9.209 0 0 0 5.045 8.24.506.506 0 0 1 .234.655.497.497 0 0 1-.451.297zm13.099-4.265a.5.5 0 0 1-.446-.727 9.14 9.14 0 0 0 1.008-4.186 9.21 9.21 0 0 0-5.045-8.241l.444-.896-.243.438.247-.435a10.207 10.207 0 0 1 5.597 9.135c0 1.623-.376 3.184-1.117 4.639a.498.498 0 0 1-.445.273zM16 11.963a4.037 4.037 0 1 0 0 8.074 4.037 4.037 0 0 0 0-8.074zm0 4.749a.712.712 0 1 1 0-1.425.712.712 0 0 1 0 1.425z"/></svg>`
-		const pause_svg = `<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32" xml:space="preserve"><style></style><path d="M13 28H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6H8v20zM25 28h-6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6h-4v20z"/></svg>`;
-		const play_svg = `<svg version="1.1" id="play" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32" xml:space="preserve"><path d="M7 28a.999.999 0 0 1-1-1V5a1 1 0 0 1 1.521-.854l18 11a1.001 1.001 0 0 1 0 1.708l-18 11A1 1 0 0 1 7 28zM8 6.783v18.434L23.082 16 8 6.783z"/></svg>`;
-
-		let tracks = [];
-		let index = -1;
-
-		let originalOrder = [];
-		let shuffled = false; // is shuffle currently active
-
-		function saveOriginalOrder() {
-			originalOrder = [...tracks];
-		}
-
-		function restoreOriginalOrder() {
-			if (originalOrder.length) {
-				const currentTrack = tracks[index];
-				tracks = [...originalOrder];
-				index = tracks.findIndex(t => t.url === currentTrack.url);
-			}
-		}
-
-		settings.addEventListener("click", () => {
-			//settingsModal.style.transform = "translateY(30)";
-			settingsModal.classList.add("modal-open");
-		});
-
-		settingsModal.querySelector(".close").addEventListener("click", () => {
-			settingsModal.classList.remove("modal-open");
-		});
-
-		// Close modal when clicking outside content
-		settingsModal.addEventListener("click", (e) => {
-			if (e.target === settingsModal) {
-				settingsModal.classList.remove("modal-open");
-			}
-		});
-		document.addEventListener("keydown", (e) => {
-			if (e.key === "Escape" && settingsModal.classList.contains("modal-open")) {
-				settingsModal.classList.remove("modal-open");
-			}
-		});
-
-		document.title = app_name;
-		document.querySelector(".banner").innerHTML = app_name;
-
-
-		function muteVolume() {
-			volume_muter.querySelector("#v-active").style.display = "none";
-			volume_muter.querySelector("#v-muted").style.display = "inline-block";
-		}
-
-		function unmuteVolume() {
-			volume_muter.querySelector("#v-active").style.display = "inline-block";
-			volume_muter.querySelector("#v-muted").style.display = "none";
-		}
-
-		volume_muter.addEventListener("click", () => {
-			if (audio.muted) {
-				audio.muted = false;
-				unmuteVolume();
-			} else {
-				audio.muted = true;
-				muteVolume();
-			}
-		})
-
-		function setTheme() {
-			const themeSwitch = document.getElementById("themeSwitch");
-
-			themeSwitch.addEventListener("change", () => {
-				document.body.classList.toggle("dark", themeSwitch.checked);
-
-				// optional: save user preference
-				localStorage.setItem("theme", themeSwitch.checked ? "dark" : "light");
-			});
-
-			// load previous preference
-			window.addEventListener("load", () => {
-				const saved = localStorage.getItem("theme");
-				if (saved === "dark") {
-					document.body.classList.add("dark");
-					themeSwitch.checked = true;
-				}
-			});
-		}
-		setTheme();
-
-		function shuffleArray(array) {
-			const arr = [...array];
-			for (let i = arr.length - 1; i > 0; i--) {
-				const j = Math.floor(Math.random() * (i + 1));
-				[arr[i], arr[j]] = [arr[j], arr[i]];
-			}
-			return arr;
-		}
-
-		function applyShuffle() {
-			if (tracks.length <= 1) return;
-
-			// Preserve current track
-			const currentTrack = (index >= 0 && index < tracks.length) ? tracks[index] : tracks[0];
-
-			// Create a fully shuffled copy
-			const shuffledTracks = shuffleArray(tracks);
-
-			// Find the new index of the same current track
-			const newIndex = shuffledTracks.findIndex(t => t.url === currentTrack.url);
-			if (newIndex === -1) return;
-
-			tracks = [...shuffledTracks];
-			index = newIndex;
-
-			shuffled = true;
-			localStorage.setItem("shuffle", "true");
-			document.getElementById("shfl_status").innerText = "ON";
-			showToast("Shuffle is ON");
-
-			refreshStack();
-			//arrangement(); // realign layout now that index changed
-		}
-
-
-		function disableShuffle() {
-			if (!originalOrder.length) return;
-
-			const currentTrack = (index >= 0 && index < tracks.length) ? tracks[index] : tracks[0];
-			const currentURL = currentTrack.url;
-
-			tracks = [...originalOrder];
-			index = tracks.findIndex(t => t.url === currentURL);
-			if (index === -1) index = 0;
-
-			shuffled = false;
-			localStorage.setItem("shuffle", "false");
-			document.getElementById("shfl_status").innerText = "OFF";
-			showToast("Shuffle is OFF");
-
-			refreshStack();
-			//arrangement(); // ensure current track centers correctly
-		}
-
-
-
-
-
-		shuffleToggle.addEventListener("change", () => {
-			if (shuffleToggle.checked) {
-				applyShuffle();
-			} else {
-				disableShuffle();
-			}
-		});
-
-
-
-
-		function loadShuffleFromLocalStorage() {
-			const shuffleValue = localStorage.getItem("shuffle");
-			if (shuffleValue === "true") {
-				shuffleToggle.checked = true;
-				applyShuffle();
-			} else {
-				shuffleToggle.checked = false;
-				disableShuffle();
-			}
-		}
-
-
-		loadShuffleFromLocalStorage();
-		document.getElementById("shfl_status").innerHTML = shuffleToggle.checked ? "ON" : "OFF";
-
-
-
-		function formatTime(sec) {
-			if (!isFinite(sec)) return "0:00";
-			sec = Math.floor(sec);
-			return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
-		}
-
-		async function addFiles(files) {
-			const newTracks = [];
-
-			for (const file of files) {
-				if (!file.type.startsWith("audio/")) continue;
-
-				const track = {
-					name: file.name,
-					url: URL.createObjectURL(file),
-					size: (file.size / 1024 / 1024).toFixed(1) + " MB",
-					cover: null,
-					metadata: null
-				};
-
-				// Try to extract embedded album art from metadata
-				//track.cover = await extractCoverFromMP3(file);
-				track.metadata = await extractMetadataFromAudio(file);
-				track.cover = track.metadata?.cover || null;
-				console.log(track.metadata);
-				newTracks.push(track);
-			}
-
-			tracks.push(...newTracks);
-			saveOriginalOrder();
-			// tracks = tracks.reverse(); // optional if you want latest on top
-
-			//shuffle if enabled
-			// If shuffle is active, integrate new tracks into the shuffled order dynamically
-			if (shuffled) {
-				const currentTrack = tracks[index >= 0 ? index : 0];
-				const before = tracks.slice(0, index + 1);
-				const after = tracks.slice(index + 1);
-
-				const shuffledAfter = shuffleArray(after);
-				tracks = [...before, ...shuffledAfter];
-			}
-
-			if (index === -1 && tracks.length > 0) {
-				const hint = document.querySelector('.hint-banner');
-
-				// Start fade out
-				hint.style.opacity = '1'; // ensure it's visible
-				hint.style.transition = 'opacity 1.5s ease-out';
-				hint.style.opacity = '0'; // trigger fade out
-
-				// After transition ends, hide it completely
-				hint.addEventListener('transitionend', function handler() {
-					hint.style.display = 'none';
-					loadTrack(0);
-					hint.removeEventListener('transitionend', handler);
-				});
-			}
-
-			if (shuffled) {
-				showToast(`${newTracks.length} new tracks added & shuffled`);
-			} else {
-				showToast(`${newTracks.length} new tracks added`);
-			}
-
-			refreshStack();
-			//arrangement();
-		}
-
-		function refreshStack() {
-			// Clear existing cards completely and rebuild from scratch
-			//showToast("Refreshing stack...");
-			stack.innerHTML = "";
-			renderStack();
-		}
-
-		function enableMarquee(el) {
-			const span = el.querySelector("span");
-			if (!span) return;
-			el.classList.remove("no-scroll");
-			span.style.animationDuration = "10s";
-
-			// Run after browser renders element
-			requestAnimationFrame(() => {
-				if (span.scrollWidth <= el.clientWidth) {
-					el.classList.add("no-scroll");
-				}
-			});
-		}
-
-		function disableMarquee(el) {
-			const span = el.querySelector("span");
-			if (!span) return;
-			el.classList.add("no-scroll");
-			span.style.animationDuration = "0s";
-		}
-
-		function renderStack() {
-			const windowWidth = window.innerWidth;
-
-			// 1️⃣ Add missing cards (only new ones)
-			if (stack.children.length < tracks.length) {
-				for (let i = stack.children.length; i < tracks.length; i++) {
-					const t = tracks[i];
-					const card = document.createElement("div");
-					card.classList.add("card");
-
-					// cover image or default SVG
-					const coverDiv = document.createElement("div");
-					coverDiv.classList.add("cover-image");
-
-					if (t.cover && typeof t.cover === "string" && t.cover.startsWith("blob:")) {
-						const img = document.createElement("img");
-						img.src = t.cover;
-						img.onerror = () => {
-							coverDiv.innerHTML = default_music_svg;
-							coverDiv.style.display = "grid";
-							coverDiv.style.placeItems = "center";
-						};
-						coverDiv.appendChild(img);
-					} else {
-						coverDiv.innerHTML = default_music_svg;
-						coverDiv.style.display = "grid";
-						coverDiv.style.placeItems = "center";
+    <div class="nav-bar">
+        <div class="left-side-items">
+            <div class="banner">
+                <!-- <span class="deck-icon"></span> -->
+                miniDeck
+            </div>
+        </div>
+        <div class="right-side-items">
+            <label for="fileInput" class="btn" id="addFilesbtn">
+                <span>
+                    <svg id="plus" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" xml:space="preserve">
+                        <path
+                            d="M128 63.954c0 2.006-.797 3.821-2.136 5.127-1.308 1.337-3.125 2.133-5.166 2.133H71.302v49.356c0 4.012-3.284 7.292-7.302 7.292-2.009 0-3.827-.828-5.166-2.134-1.308-1.337-2.136-3.152-2.136-5.159V71.214H7.302c-4.05 0-7.302-3.248-7.302-7.26 0-2.006.797-3.853 2.136-5.159a7.279 7.279 0 0 1 5.166-2.134h49.395V7.306c0-4.012 3.284-7.26 7.302-7.26 2.009 0 3.827.828 5.166 2.133a7.238 7.238 0 0 1 2.136 5.127v49.356h49.395A7.276 7.276 0 0 1 128 63.954z" />
+                    </svg>
+                    Add Files
+                </span>
+            </label>
+            <input id="fileInput" type="file" accept="audio/*" multiple>
+            <button class="btn">Help</button>
+            <button class="btn" id="settings">Settings</button>
+        </div>
+    </div>
+
+    <main>
+        <div class="hint-banner">
+            <span>Drag and drop or click Add Files to add files</span>
+        </div>
+        <div class="stack" id="stack">
+
+        </div>
+        <!-- Dot Pulse Visualizer -->
+        <canvas id="dot-visualizer"></canvas>
+    </main>
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-bann">Settings</div>
+                <span class="close">&times;</span>
+            </div>
+            <div class="settings-menu">
+                <div class="setting">
+                    <label for="shuffle">Shuffle</label>
+                    <input type="checkbox" id="shuffle">
+                </div>
+                <div class="setting">
+                    <label for="repeat">Repeat</label>
+                    <input type="checkbox" id="repeat">
+                </div>
+                <div class="setting">
+                    <label for="themeSwitch">Dark Mode</label>
+                    <input type="checkbox" id="themeSwitch">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="player">
+        <div class="progress">
+            <div class="progress-bar">
+                <label id="currentTime" for="seek">0:00</label>
+                <input id="seek" type="range" min="0" max="1000" value="0" step="1">
+                <label id="duration" for="seek">0:00</label>
+            </div>
+            <div class="volume-bar">
+                <label for="volume" id="volumeLabel">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="v-active">
+                        <g data-name="low audio">
+                            <path
+                                d="M11.46 3c-1 0-1 .13-6.76 4H1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h3.7l5.36 3.57A2.54 2.54 0 0 0 14 18.46V5.54A2.54 2.54 0 0 0 11.46 3zM2 9h2v6H2zm10 9.46a.55.55 0 0 1-.83.45L6 15.46V8.54l5.17-3.45a.55.55 0 0 1 .83.45zM16.83 9.17a1 1 0 0 0-1.42 1.42 2 2 0 0 1 0 2.82 1 1 0 0 0 .71 1.71c1.38 0 3.04-3.62.71-5.95z" />
+                        </g>
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" id="v-muted">
+                        <path
+                            d="m21.29 1.29-3.43 3.44a2.52 2.52 0 0 0-3.8-1.3L8.7 7H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h.59l-4.3 4.29a1 1 0 0 0 1.42 1.42C9.05 16.36 8.29 17 8.7 17c5.7 3.8 5.73 4 6.76 4A2.54 2.54 0 0 0 18 18.46v-11l4.71-4.7a1 1 0 0 0-1.42-1.47zm-6.12 3.8a.55.55 0 0 1 .83.45v1l-6 6v-4zM6 15V9h2c0 6.81.53 6-2 6zm10 3.46a.55.55 0 0 1-.83.45L10 15.46c0-.1-.46.42 6-6.05z" />
+                    </svg>
+                </label>
+                <input id="volume" type="range" min="0" max="1" step="0.01" default="0.5">
+            </div>
+        </div>
+        <div class="three-panes">
+            <div class="left">
+                <div class="cover" id="cover">♪</div>
+                <div class="info">
+                    <div class="title" id="title">No track playing</div>
+                    <div class="artist" id="artist">—</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button title="Previous button" id="prevBtn">
+                    <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32"
+                        xml:space="preserve">
+                        <style></style>
+                        <path
+                            d="M20 28a1 1 0 0 1-.521-.146l-18-11a1.002 1.002 0 0 1 0-1.708l18-11A.999.999 0 0 1 21 5v6.11a1 1 0 0 1-.479.854L13.918 16l6.603 4.035c.297.182.479.506.479.854V27a1 1 0 0 1-1 1zM3.918 16 19 25.217V21.45l-7.521-4.596a1 1 0 0 1 0-1.707L19 10.55V6.783L3.918 16z" />
+                        <path
+                            d="M30 28a1 1 0 0 1-.521-.146l-18-11a1.002 1.002 0 0 1 0-1.708l18-11A.999.999 0 0 1 31 5v22a1 1 0 0 1-1 1zM13.918 16 29 25.217V6.783L13.918 16z" />
+                    </svg>
+                </button>
+                <button title="Play button" id="playPauseBtn">
+                    <svg version="1.1" id="play" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32"
+                        xml:space="preserve">
+                        <path
+                            d="M7 28a.999.999 0 0 1-1-1V5a1 1 0 0 1 1.521-.854l18 11a1.001 1.001 0 0 1 0 1.708l-18 11A1 1 0 0 1 7 28zM8 6.783v18.434L23.082 16 8 6.783z" />
+                    </svg>
+                </button>
+                <button title="Next button" id="nextBtn"><svg version="1.1" id="Layer_2"
+                        xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32" xml:space="preserve">
+                        <style></style>
+                        <path
+                            d="M12 28a1 1 0 0 1-1-1v-6.111c0-.348.182-.672.479-.854L18.082 16l-6.603-4.035A1.001 1.001 0 0 1 11 11.11V5a1 1 0 0 1 1.521-.854l18 11a1.002 1.002 0 0 1 0 1.708l-18 11A1 1 0 0 1 12 28zm1-6.55v3.767L28.082 16 13 6.783v3.767l7.521 4.596a1.001 1.001 0 0 1 0 1.708L13 21.45z" />
+                        <path
+                            d="M2 28a1 1 0 0 1-1-1V5a1 1 0 0 1 1.521-.854l18 11a1.002 1.002 0 0 1 0 1.708l-18 11A1 1 0 0 1 2 28zM3 6.783v18.434L18.082 16 3 6.783z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="right">
+                <div class="indicator">
+                    <div>REP <span id="rep_status">--</span></div>
+                    <div>SHFL <span id="shfl_status">--</span></div>
+                </div>
+
+            </div>
+        </div>
+
+
+
+    </div>
+
+    <audio id="audio" preload="metadata"></audio>
+
+
+    <script defer>
+        const app_name = "miniDeck";
+        const fileInput = document.getElementById("fileInput");
+        const stack = document.getElementById("stack");
+        const titleEl = document.getElementById("title");
+        const artistEl = document.getElementById("artist");
+        const coverEl = document.getElementById("cover");
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const prevBtn = document.getElementById("prevBtn");
+        const audio = document.getElementById("audio");
+        const seek = document.getElementById("seek");
+        const currentTimeEl = document.getElementById("currentTime");
+        const durationEl = document.getElementById("duration");
+        const volume = document.getElementById("volume");
+        const settingsModal = document.getElementById("settingsModal");
+        const settings = document.getElementById("settings");
+        const shuffleToggle = document.getElementById("shuffle");
+        const repeatToggle = document.getElementById("repeat");
+        const volume_muter = document.getElementById("volumeLabel");
+
+        const default_music_svg = `<svg id="no-cover-default" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" xml:space="preserve"><path d="M16 28.458C9.131 28.458 3.542 22.87 3.542 16S9.131 3.542 16 3.542 28.458 9.13 28.458 16 22.869 28.458 16 28.458zm0-23.916C9.682 4.542 4.542 9.682 4.542 16S9.682 27.458 16 27.458 27.458 22.319 27.458 16 22.318 4.542 16 4.542z"/><path d="M11.583 25.185a.488.488 0 0 1-.182-.036.611.611 0 0 1-.128-.07c-3.376-1.714-5.518-5.213-5.518-9.086 0-1.616.373-3.173 1.109-4.625a.5.5 0 1 1 .893.451 9.15 9.15 0 0 0-1.002 4.174 9.209 9.209 0 0 0 5.045 8.24.506.506 0 0 1 .234.655.497.497 0 0 1-.451.297zm13.099-4.265a.5.5 0 0 1-.446-.727 9.14 9.14 0 0 0 1.008-4.186 9.21 9.21 0 0 0-5.045-8.241l.444-.896-.243.438.247-.435a10.207 10.207 0 0 1 5.597 9.135c0 1.623-.376 3.184-1.117 4.639a.498.498 0 0 1-.445.273zM16 11.963a4.037 4.037 0 1 0 0 8.074 4.037 4.037 0 0 0 0-8.074zm0 4.749a.712.712 0 1 1 0-1.425.712.712 0 0 1 0 1.425z"/></svg>`
+        const pause_svg = `<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32" style="enable-background:new 0 0 32 32" xml:space="preserve"><style></style><path d="M13 28H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6H8v20zM25 28h-6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1zm-5-2h4V6h-4v20z"/></svg>`;
+        const play_svg = `<svg version="1.1" id="play" xmlns="http://www.w3.org/2000/svg" x="0" y="0" viewBox="0 0 32 32" xml:space="preserve"><path d="M7 28a.999.999 0 0 1-1-1V5a1 1 0 0 1 1.521-.854l18 11a1.001 1.001 0 0 1 0 1.708l-18 11A1 1 0 0 1 7 28zM8 6.783v18.434L23.082 16 8 6.783z"/></svg>`;
+
+        let tracks = [];
+        let index = -1;
+
+        let originalOrder = [];
+        let shuffled = false; // is shuffle currently active
+
+        function saveOriginalOrder() {
+            originalOrder = [...tracks];
+        }
+
+        function restoreOriginalOrder() {
+            if (originalOrder.length) {
+                const currentTrack = tracks[index];
+                tracks = [...originalOrder];
+                index = tracks.findIndex(t => t.url === currentTrack.url);
+            }
+        }
+
+        settings.addEventListener("click", () => {
+            //settingsModal.style.transform = "translateY(30)";
+            settingsModal.classList.add("modal-open");
+        });
+
+        settingsModal.querySelector(".close").addEventListener("click", () => {
+            settingsModal.classList.remove("modal-open");
+        });
+
+        // Close modal when clicking outside content
+        settingsModal.addEventListener("click", (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.classList.remove("modal-open");
+            }
+        });
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && settingsModal.classList.contains("modal-open")) {
+                settingsModal.classList.remove("modal-open");
+            }
+        });
+
+        document.title = app_name;
+        document.querySelector(".banner").innerHTML = app_name;
+
+
+        function muteVolume() {
+            volume_muter.querySelector("#v-active").style.display = "none";
+            volume_muter.querySelector("#v-muted").style.display = "inline-block";
+        }
+
+        function unmuteVolume() {
+            volume_muter.querySelector("#v-active").style.display = "inline-block";
+            volume_muter.querySelector("#v-muted").style.display = "none";
+        }
+
+        volume_muter.addEventListener("click", () => {
+            if (audio.muted) {
+                audio.muted = false;
+                unmuteVolume();
+            } else {
+                audio.muted = true;
+                muteVolume();
+            }
+        })
+
+        function setTheme() {
+            const themeSwitch = document.getElementById("themeSwitch");
+
+            themeSwitch.addEventListener("change", () => {
+                document.body.classList.toggle("dark", themeSwitch.checked);
+
+                // optional: save user preference
+                localStorage.setItem("theme", themeSwitch.checked ? "dark" : "light");
+            });
+
+            // load previous preference
+            window.addEventListener("load", () => {
+                const saved = localStorage.getItem("theme");
+                if (saved === "dark") {
+                    document.body.classList.add("dark");
+                    themeSwitch.checked = true;
+                }
+            });
+        }
+        setTheme();
+
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function applyShuffle() {
+            if (tracks.length <= 1) return;
+
+            // Preserve current track
+            const currentTrack = (index >= 0 && index < tracks.length) ? tracks[index] : tracks[0];
+
+            // Create a fully shuffled copy
+            const shuffledTracks = shuffleArray(tracks);
+
+            // Find the new index of the same current track
+            const newIndex = shuffledTracks.findIndex(t => t.url === currentTrack.url);
+            if (newIndex === -1) return;
+
+            tracks = [...shuffledTracks];
+            index = newIndex;
+
+            shuffled = true;
+            localStorage.setItem("shuffle", "true");
+            document.getElementById("shfl_status").innerText = "ON";
+            showToast("Shuffle is ON");
+
+            refreshStack();
+            //arrangement(); // realign layout now that index changed
+        }
+
+
+        function disableShuffle() {
+            if (!originalOrder.length) return;
+
+            const currentTrack = (index >= 0 && index < tracks.length) ? tracks[index] : tracks[0];
+            const currentURL = currentTrack.url;
+
+            tracks = [...originalOrder];
+            index = tracks.findIndex(t => t.url === currentURL);
+            if (index === -1) index = 0;
+
+            shuffled = false;
+            localStorage.setItem("shuffle", "false");
+            document.getElementById("shfl_status").innerText = "OFF";
+            showToast("Shuffle is OFF");
+
+            refreshStack();
+            //arrangement(); // ensure current track centers correctly
+        }
+
+
+
+
+
+        shuffleToggle.addEventListener("change", () => {
+            if (shuffleToggle.checked) {
+                applyShuffle();
+            } else {
+                disableShuffle();
+            }
+        });
+
+
+
+
+        function loadShuffleFromLocalStorage() {
+            const shuffleValue = localStorage.getItem("shuffle");
+            if (shuffleValue === "true") {
+                shuffleToggle.checked = true;
+                applyShuffle();
+            } else {
+                shuffleToggle.checked = false;
+                disableShuffle();
+            }
+        }
+
+
+        loadShuffleFromLocalStorage();
+        document.getElementById("shfl_status").innerHTML = shuffleToggle.checked ? "ON" : "OFF";
+
+
+
+        function formatTime(sec) {
+            if (!isFinite(sec)) return "0:00";
+            sec = Math.floor(sec);
+            return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+        }
+
+        async function addFiles(files) {
+            const newTracks = [];
+
+            for (const file of files) {
+                if (!file.type.startsWith("audio/")) continue;
+
+                const track = {
+                    name: file.name,
+                    url: URL.createObjectURL(file),
+                    size: (file.size / 1024 / 1024).toFixed(1) + " MB",
+                    cover: null,
+                    metadata: null
+                };
+
+                // Try to extract embedded album art from metadata
+                //track.cover = await extractCoverFromMP3(file);
+                track.metadata = await extractMetadataFromAudio(file);
+                track.cover = track.metadata?.cover || null;
+                console.log(track.metadata);
+                newTracks.push(track);
+            }
+
+            tracks.push(...newTracks);
+            saveOriginalOrder();
+            // tracks = tracks.reverse(); // optional if you want latest on top
+
+            //shuffle if enabled
+            // If shuffle is active, integrate new tracks into the shuffled order dynamically
+            if (shuffled) {
+                const currentTrack = tracks[index >= 0 ? index : 0];
+                const before = tracks.slice(0, index + 1);
+                const after = tracks.slice(index + 1);
+
+                const shuffledAfter = shuffleArray(after);
+                tracks = [...before, ...shuffledAfter];
+            }
+
+            if (index === -1 && tracks.length > 0) {
+                const hint = document.querySelector('.hint-banner');
+
+                // Start fade out
+                hint.style.opacity = '1'; // ensure it's visible
+                hint.style.transition = 'opacity 1.5s ease-out';
+                hint.style.opacity = '0'; // trigger fade out
+
+                // After transition ends, hide it completely
+                hint.addEventListener('transitionend', function handler() {
+                    hint.style.display = 'none';
+                    loadTrack(0);
+                    hint.removeEventListener('transitionend', handler);
+                });
+            }
+
+            if (shuffled) {
+                showToast(`${newTracks.length} new tracks added & shuffled`);
+            } else {
+                showToast(`${newTracks.length} new tracks added`);
+            }
+
+            refreshStack();
+            //arrangement();
+        }
+
+        function refreshStack() {
+            // Clear existing cards completely and rebuild from scratch
+            //showToast("Refreshing stack...");
+            stack.innerHTML = "";
+            renderStack();
+        }
+
+        function enableMarquee(el) {
+            const span = el.querySelector("span");
+            if (!span) return;
+            el.classList.remove("no-scroll");
+            span.style.animationDuration = "10s";
+
+            // Run after browser renders element
+            requestAnimationFrame(() => {
+                if (span.scrollWidth <= el.clientWidth) {
+                    el.classList.add("no-scroll");
+                }
+            });
+        }
+
+        function enableMarqueeGlbl(el, speed = 10) {
+            if (!el) return;
+
+            // remove any old marquee span (avoid nesting on multiple calls)
+            const existingSpan = el.querySelector("span");
+            if (existingSpan) {
+                el.innerHTML = existingSpan.textContent;
+            }
+
+            // Save original content (to allow re-enabling safely)
+            const original = el.innerHTML.trim();
+
+            // Create span wrapper for animation
+            const span = document.createElement("span");
+            span.innerHTML = original;
+
+            // Apply marquee container styles
+            el.innerHTML = ""; // clear old content
+            el.style.overflow = "hidden";
+            el.style.whiteSpace = "nowrap";
+            el.style.position = "relative";
+
+            // Apply animation to span
+            span.style.display = "inline-block";
+            span.style.paddingLeft = "100%";
+            span.style.animation = `marqueeScroll ${speed}s linear infinite`;
+
+            el.appendChild(span);
+
+            // Create keyframes dynamically (only once)
+            if (!document.getElementById("global-marquee-style")) {
+                const style = document.createElement("style");
+                style.id = "global-marquee-style";
+                style.textContent = `
+					@keyframes marqueeScroll {
+						0%   { transform: translateX(0); }
+						100% { transform: translateX(-100%); }
 					}
+				`;
+                document.head.appendChild(style);
+            }
 
-					const nameDiv = document.createElement("div");
-					nameDiv.classList.add("name", "marquee");
-					nameDiv.innerHTML = `<span>${t.name}</span>`; //t.name;
-
-					const sizeDiv = document.createElement("div");
-					sizeDiv.classList.add("size");
-					sizeDiv.textContent = t.size;
-
-					const artistDiv = document.createElement("div");
-					sizeDiv.classList.add("artist");
-					sizeDiv.textContent = t.metadata.artist;
+            // Disable animation if text fits inside
+            requestAnimationFrame(() => {
+                if (span.scrollWidth <= el.clientWidth) {
+                    span.style.animation = "none";
+                    span.style.paddingLeft = "0";
+                    span.style.transform = "translateX(0)";
+                }
+            });
+        }
 
 
+        function disableMarquee(el) {
+            const span = el.querySelector("span");
+            if (!span) return;
+            el.classList.add("no-scroll");
+            span.style.animationDuration = "0s";
+        }
 
-					card.appendChild(coverDiv);
-					card.appendChild(nameDiv);
-					card.appendChild(sizeDiv);
+        function renderStack() {
+            const windowWidth = window.innerWidth;
 
-					const borderReact = document.createElement("div");
-					borderReact.classList.add("border-react");
-					card.appendChild(borderReact);
+            // 1️⃣ Add missing cards (only new ones)
+            if (stack.children.length < tracks.length) {
+                for (let i = stack.children.length; i < tracks.length; i++) {
+                    const t = tracks[i];
+                    const card = document.createElement("div");
+                    card.classList.add("card");
 
-					card.onclick = () => setActive(i);
+                    // cover image or default SVG
+                    const coverDiv = document.createElement("div");
+                    coverDiv.classList.add("cover-image");
 
-					// 🧠 Start from offscreen position for smooth entry
-					card.style.transform = `translateX(${windowWidth}px) rotateY(0deg)`;
-					card.style.transition = "transform 1s ease";
-					stack.appendChild(card);
-				}
-			}
+                    if (t.cover && typeof t.cover === "string" && t.cover.startsWith("blob:")) {
+                        const img = document.createElement("img");
+                        img.src = t.cover;
+                        img.onerror = () => {
+                            coverDiv.innerHTML = default_music_svg;
+                            coverDiv.style.display = "grid";
+                            coverDiv.style.placeItems = "center";
+                        };
+                        coverDiv.appendChild(img);
+                    } else {
+                        coverDiv.innerHTML = default_music_svg;
+                        coverDiv.style.display = "grid";
+                        coverDiv.style.placeItems = "center";
+                    }
 
-			// 2️⃣ Update transforms for all cards smoothly			
-			arrangement();
+                    const nameDiv = document.createElement("div");
+                    nameDiv.classList.add("name", "marquee");
+                    nameDiv.innerHTML = `<span>${t.name}</span>`; //t.name;
 
-		}
+                    const sizeDiv = document.createElement("div");
+                    sizeDiv.classList.add("size");
+                    sizeDiv.textContent = t.size;
 
-		function arrangement() {
-			//console.log("Arranging...");
-			const windowWidth = window.innerWidth;
-			[...stack.children].forEach((card, i) => {
-				card.style.transition = "transform 1s ease";
-				if (i < index) {
-					// LEFT SIDE cards					
-					card.style.transform = `
+                    const artistDiv = document.createElement("div");
+                    sizeDiv.classList.add("artist");
+                    sizeDiv.textContent = t.metadata.artist;
+
+
+
+                    card.appendChild(coverDiv);
+                    card.appendChild(nameDiv);
+                    card.appendChild(sizeDiv);
+
+                    const borderReact = document.createElement("div");
+                    borderReact.classList.add("border-react");
+                    card.appendChild(borderReact);
+
+                    card.onclick = () => setActive(i);
+
+                    // 🧠 Start from offscreen position for smooth entry
+                    card.style.transform = `translateX(${windowWidth}px) rotateY(0deg)`;
+                    card.style.transition = "transform 1s ease";
+                    stack.appendChild(card);
+                }
+            }
+
+            // 2️⃣ Update transforms for all cards smoothly			
+            arrangement();
+
+        }
+
+        function arrangement() {
+            //console.log("Arranging...");
+            const windowWidth = window.innerWidth;
+            [...stack.children].forEach((card, i) => {
+                card.style.transition = "transform 1s ease";
+                if (i < index) {
+                    // LEFT SIDE cards					
+                    card.style.transform = `
 							rotateY(0deg)
 							translateZ(${10 - (index - i)}px)
 							translateX(${windowWidth * 0.1 + (i - index) * 10}px)
 							scale(0.9)
 						`;
-					//card.style.zIndex = index - i;
-					card.onclick = () => setActive(i);
-					disableMarquee(card.querySelector(".name"));
-					resetStyles(card);
-				}
-				else if (i === index) {
-					// CENTER (active) card					
-					card.style.transform = `
+                    //card.style.zIndex = index - i;
+                    card.onclick = () => setActive(i);
+                    disableMarquee(card.querySelector(".name"));
+                    resetStyles(card);
+                }
+                else if (i === index) {
+                    // CENTER (active) card					
+                    card.style.transform = `
 							rotateY(0deg)
 							translateZ(60px)
 							translateX(${windowWidth * 0.45}px)
 							scale(1.05)
 						`;
-					card.style.border = "2px solid var(--accent)";
-					card.style.height = "300px";
-					card.onclick = playPause;
-					enableMarquee(card.querySelector(".name"));
+                    card.style.border = "2px solid var(--accent)";
+                    card.style.height = "300px";
+                    card.onclick = playPause;
+                    enableMarquee(card.querySelector(".name"));
 
-				}
-				else {
-					// RIGHT SIDE cards					
-					card.style.transform = `
+                }
+                else {
+                    // RIGHT SIDE cards					
+                    card.style.transform = `
 								rotateY(0deg)
 								translateZ(${10 + (index - i)}px)
 								translateX(${windowWidth * 0.8 + (i - index) * 10}px)
 								scale(0.9)
 							`;
-					card.onclick = () => setActive(i);
-					disableMarquee(card.querySelector(".name"));
-					resetStyles(card);
-				}
-			});
-		}
-
-		function setActive(i) {
-			//showToast("Switching to track " + (i + 1) + " of " + tracks.length);
-			index = i;
-			loadTrack(i);
-			playTrack();
-		}
-
-		function loadTrack(i) {
-			const t = tracks[i];
-			audio.src = t.url;
-			audio.volume = 1 * volume.value;
-			titleEl.textContent = t.name;
-			//artistEl.textContent = `Track ${i + 1} of ${tracks.length}`;
-			artistEl.textContent = t.metadata.artist;
-			// show album art if it exists			
-			if (t.cover && typeof t.cover === "string" && t.cover.startsWith("blob:")) {
-				const img = document.createElement("img");
-				img.src = t.cover;
-				coverEl.innerHTML = "";
-				coverEl.style.backgroundSize = "cover";
-				coverEl.style.backgroundPosition = "center";
-				coverEl.textContent = "";
-				coverEl.appendChild(img);
-				img.onerror = () => {
-					coverEl.innerHTML = default_music_svg;
-				};
-			} else {
-				coverEl.style.backgroundImage = "none";
-				coverEl.textContent = "♪";
-				coverEl.textContent = t.name[0].toUpperCase();
-			}
-			renderStack();
-		}
-
-		function playTrack() {
-			audio.play();
-			playPauseBtn.innerHTML = pause_svg;
-		}
-
-		function pauseTrack() {
-			audio.pause();
-			playPauseBtn.innerHTML = play_svg;
-		}
-
-		function playPause() {
-			if (!tracks.length) return;
-			if (index === -1) {
-				index = 0;
-				renderStack();
-			}
-			audio.paused ? playTrack() : pauseTrack();
-		}
-
-		function nextTrack() {
-			if (!tracks.length) return;
-			index = (index + 1) % tracks.length;
-			loadTrack(index);
-			playTrack();
-		}
-
-		function prevTrack() {
-			if (!tracks.length) return;
-			index = (index - 1 + tracks.length) % tracks.length;
-			loadTrack(index);
-			playTrack();
-		}
-
-		/* EVENTS */
-		fileInput.onchange = e => addFiles(e.target.files);
-		document.ondrop = e => { e.preventDefault(); addFiles(e.dataTransfer.files); };
-		document.ondragover = e => e.preventDefault();
-
-		playPauseBtn.onclick = playPause;
-		nextBtn.onclick = nextTrack;
-		prevBtn.onclick = prevTrack;
-
-		audio.ontimeupdate = () => {
-			seek.value = (audio.currentTime / audio.duration) * 1000 || 0;
-			currentTimeEl.textContent = formatTime(audio.currentTime);
-			durationEl.textContent = formatTime(audio.duration);
-		};
-		seek.oninput = () => {
-			audio.currentTime = (seek.value / 1000) * (audio.duration || 0);
-		};
-		volume.oninput = () => { audio.volume = volume.value; };
-		audio.onended = nextTrack;
-
-		//attempt to extract cover from mp3
-		/*async function extractCoverFromMP3(file) {
-			const buffer = await file.arrayBuffer();
-			const view = new DataView(buffer);
-
-			// check for ID3 header
-			if (String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2)) !== "ID3") {
-				console.log("No ID3 tag found.");
-				return null;
-			}
-
-			// skip ID3 header (10 bytes)
-			let offset = 10;
-
-			while (offset < buffer.byteLength - 10) {
-				const frameID = String.fromCharCode(
-					view.getUint8(offset),
-					view.getUint8(offset + 1),
-					view.getUint8(offset + 2),
-					view.getUint8(offset + 3)
-				);
-
-				const frameSize = view.getUint32(offset + 4);
-				offset += 10; // skip frame header
-
-				if (frameID === "APIC") {
-					// read mime type (null-terminated)
-					let mime = "";
-					let i = 1; // skip text encoding byte
-					while (view.getUint8(offset + i) !== 0) {
-						mime += String.fromCharCode(view.getUint8(offset + i));
-						i++;
-					}
-					i++; // skip null terminator
-					const pictureType = view.getUint8(offset + i);
-					i++;
-					// skip description (null-terminated)
-					while (view.getUint8(offset + i) !== 0) i++;
-					i++; // skip final null terminator
-
-					const imageData = buffer.slice(offset + i, offset + frameSize);
-					const blob = new Blob([imageData], { type: mime });
-					return URL.createObjectURL(blob);
-				} else {
-					offset += frameSize; // skip non-APIC frame
-				}
-			}
-
-			console.log("No embedded image found.");
-			return null;
-		}
-*/
-		async function extractMetadataFromAudio(file) {
-			try {
-				const buffer = await file.arrayBuffer();
-				const view = new DataView(buffer);
-
-				// Check ID3 header
-				if (
-					String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2)) !== "ID3"
-				) {
-					console.log("No ID3 tag found.");
-					return {
-						title: file.name.replace(/\.[^/.]+$/, ""),
-						artist: "Unknown Artist",
-						album: "Unknown Album",
-						genre: "",
-						year: "",
-						cover: null,
-					};
-				}
-
-				let offset = 10; // Skip ID3 header
-				const tags = {};
-				let cover = null;
-
-				const decoderUTF16 = new TextDecoder("utf-16");
-				const decoderUTF8 = new TextDecoder("utf-8");
-				const decoderLatin1 = new TextDecoder("iso-8859-1");
-
-				while (offset + 10 <= buffer.byteLength) {
-					const frameID = String.fromCharCode(
-						view.getUint8(offset),
-						view.getUint8(offset + 1),
-						view.getUint8(offset + 2),
-						view.getUint8(offset + 3)
-					);
-					const frameSize = view.getUint32(offset + 4);
-
-					if (frameSize <= 0) break;
-					offset += 10; // Skip frame header
-
-					if (frameID === "APIC") {
-						// Embedded cover art
-						try {
-							let i = offset + 1;
-							let mime = "";
-							while (view.getUint8(i) !== 0) mime += String.fromCharCode(view.getUint8(i++));
-							i++; // skip null terminator
-							i++; // skip picture type byte
-							while (view.getUint8(i) !== 0) i++; // skip description
-							i++;
-							const imageData = buffer.slice(i, offset + frameSize);
-							const blob = new Blob([imageData], { type: mime || "image/jpeg" });
-							cover = URL.createObjectURL(blob);
-						} catch (e) {
-							console.warn("Failed to read cover:", e);
-						}
-					} else if (["TIT2", "TPE1", "TALB", "TCON", "TYER", "TDRC"].includes(frameID)) {
-						const encodingByte = view.getUint8(offset);
-						const textBytes = new Uint8Array(buffer, offset + 1, frameSize - 1);
-
-						let text = "";
-						try {
-							if (encodingByte === 1 || encodingByte === 2)
-								text = decoderUTF16.decode(textBytes);
-							else if (encodingByte === 3)
-								text = decoderUTF8.decode(textBytes);
-							else
-								text = decoderLatin1.decode(textBytes);
-						} catch (e) {
-							text = "";
-						}
-
-						text = text.replace(/\0/g, "").trim();
-						tags[frameID] = text;
-					}
-
-					offset += frameSize;
-				}
-
-				return {
-					title: tags["TIT2"] || file.name.replace(/\.[^/.]+$/, ""),
-					artist: tags["TPE1"] || "Unknown Artist",
-					album: tags["TALB"] || "Unknown Album",
-					genre: tags["TCON"] || "",
-					year: tags["TYER"] || tags["TDRC"] || "",
-					cover,
-				};
-			} catch (err) {
-				console.warn("Metadata extraction failed:", err);
-				return {
-					title: file.name.replace(/\.[^/.]+$/, ""),
-					artist: "Unknown Artist",
-					album: "Unknown Album",
-					cover: null,
-				};
-			}
-
-		}
-
-		function showToast(message) {
-			// Create a container if not already present
-			let container = document.getElementById("toast-container");
-			if (!container) {
-				container = document.createElement("div");
-				container.id = "toast-container";
-				container.style.position = "fixed";
-				container.style.top = "20px";
-				container.style.left = "50%";
-				container.style.transform = "translateX(-60%)";
-				container.style.display = "flex";
-				container.style.flexDirection = "column";
-				container.style.gap = "10px";
-				container.style.zIndex = "9999";
-				container.style.pointerEvents = "none"; // clicks pass through
-				document.body.appendChild(container);
-			}
-
-			// Create the toast element
-			const toast = document.createElement("div");
-			toast.textContent = message;
-
-			// Appearance
-			toast.style.background = "var(--toast-bg)";
-			toast.style.color = "var(--text)";
-			toast.style.padding = "12px 24px";
-			toast.style.border = "2px solid var(--accent)";
-			toast.style.borderRadius = "10px";
-			toast.style.fontFamily = "Segoe UI, sans-serif";
-			toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.25)";
-			toast.style.fontWeight = "6";
-			toast.style.letterSpacing = "0.3px";
-			toast.style.opacity = "1";
-			toast.style.transform = "translateY(-80px)";
-			toast.style.transition = "all 0.5s linear";
-			toast.style.pointerEvents = "auto";
-
-			// Append to container
-			container.appendChild(toast);
-
-			// Animate in
-			requestAnimationFrame(() => {
-				toast.style.transform = "translateY(-5px)";
-			});
-
-			// Animate out after delay
-			setTimeout(() => {
-				toast.style.transform = "translateY(-80px)";
-				setTimeout(() => toast.remove(), 1000);
-			}, 5000);
-		}
-
-		// ===== DOT VISUALIZER =====
-		const canvas = document.getElementById("dot-visualizer");
-		const ctx = canvas.getContext("2d");
-		let audioCtx, analyser, source, dataArray, bufferLength;
-
-		function resizeCanvas() {
-			canvas.width = window.innerWidth;
-			canvas.height = 120;
-		}
-		window.addEventListener("resize", resizeCanvas);
-		resizeCanvas();
-
-		function initVisualizer() {
-			if (audioCtx) return; // already initialized
-			audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-			analyser = audioCtx.createAnalyser();
-			source = audioCtx.createMediaElementSource(audio);
-			analyser.fftSize = 128;
-			bufferLength = analyser.frequencyBinCount;
-			dataArray = new Uint8Array(bufferLength);
-			source.connect(analyser);
-			analyser.connect(audioCtx.destination);
-			drawDots();
-		}
-
-		function drawDotsTypeOne() {
-			requestAnimationFrame(drawDots);
-			analyser.getByteFrequencyData(dataArray);
-
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-			const dotCount = 40; // number of dots
-			const gap = canvas.width / dotCount;
-			const centerY = canvas.height / 2;
-
-			for (let i = 0; i < dotCount; i++) {
-				const value = dataArray[i * 2] || 0;
-				const radius = Math.max(4, (value / 255) * 20);
-
-				const x = i * gap + gap / 2;
-				const y = centerY; //+ Math.sin(i * 0.5 + Date.now() * 0.002) * 5;
-
-				ctx.beginPath();
-				ctx.arc(x, y, radius, 0, Math.PI * 2);
-				ctx.fillStyle = getComputedStyle(document.body)
-					.getPropertyValue("--accent")
-					.trim();
-				ctx.globalAlpha = 0.8;
-				ctx.fill();
-			}
-		}
-		function drawDots() {
-			requestAnimationFrame(drawDots);
-			analyser.getByteFrequencyData(dataArray);
-
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-			const centerX = canvas.width / 2;
-			const centerY = canvas.height / 2;
-			const totalDots = 40; // total (20 each side)
-			const half = totalDots / 2;
-			const spacing = canvas.width / totalDots;
-
-			for (let i = 0; i < totalDots; i++) {
-				const distanceFromCenter = Math.abs(i - half);
-				const mirroredIndex = Math.floor(
-					(bufferLength / half) * distanceFromCenter
-				);
-
-				const value = dataArray[mirroredIndex] || 0;
-
-				// Center beats stronger, edges softer
-				const falloff = 1 - distanceFromCenter / half;
-				const radius = Math.max(2, (value / 255) * 15 * falloff);
-
-				const x = i * spacing;
-				const y = centerY;
-
-				ctx.beginPath();
-				ctx.arc(x, y, radius, 0, Math.PI * 2);
-				ctx.fillStyle = getComputedStyle(document.body)
-					.getPropertyValue("--accent")
-					.trim();
-				ctx.globalAlpha = 0.85 * falloff;
-				ctx.fill();
-			}
-		}
-
-		let smoothed = 0;
-
-		function animateCardShadow() {
-			requestAnimationFrame(animateCardShadow);
-			if (!analyser || index === -1) return;
-
-			analyser.getByteFrequencyData(dataArray);
-
-			const activeCard = stack.children[index];
-			if (!activeCard) return;
-
-			// Split frequency ranges
-			const bass = avg(dataArray.slice(0, bufferLength * 0.2));
-			const mids = avg(dataArray.slice(bufferLength * 0.2, bufferLength * 0.6));
-			const highs = avg(dataArray.slice(bufferLength * 0.6));
-
-			// Weight them to shape the glow
-			const intensity = Math.pow((bass * 0.6 + mids * 0.3 + highs * 0.1) / 255, 2.2);
-
-			// Smooth motion
-			window._shadowSmooth = window._shadowSmooth * 0.8 + intensity * 0.2 || intensity;
-
-			const accent = getComputedStyle(document.body)
-				.getPropertyValue("--accent")
-				.trim();
-
-			const spread = 5 + window._shadowSmooth * 40; // how wide the glow is
-			const blur = 10 + window._shadowSmooth * 50;  // how soft it is
-			const alpha = 0.4 + window._shadowSmooth * 0.5;
-
-			smoothed = smoothed * 0.8 + intensity * 0.2;
-
-			const coverArt = activeCard.querySelector(".cover-image");
-			coverArt.style.scale = 1 + smoothed * 0.2;
-			coverArt.style.opacity = 0.7 + smoothed * 0.5;
-			activeCard.style.boxShadow = `0 0 ${blur}px ${spread}px ${accent}${alphaToHex(alpha)}`;
-		}
-
-		function avg(arr) {
-			return arr.reduce((a, b) => a + b, 0) / arr.length || 0;
-		}
-
-		// converts 0–1 alpha to hex (for rgba-less shadows)
-		function alphaToHex(a) {
-			return Math.round(a * 255).toString(16).padStart(2, '0');
-		}
-
-
-		audio.addEventListener("play", () => {
-			if (!audioCtx) initVisualizer();
-			if (audioCtx.state === "suspended") audioCtx.resume();
-			//animateCardBorder();
-			animateCardShadow();
-			//animateStackGradient();
-		});
-		audio.addEventListener("pause", () => {
-			const activeCard = stack.children[index];
-			if (activeCard) {
-				activeCard.style.border = "2px solid var(--accent)";
-				activeCard.style.boxShadow = "none";
-			}
-		});
-
-
-		function resetStyles(card) {
-			if (card) {
-				card.style.border = "2px solid var(--accent)";
-				card.style.boxShadow = "none";
-			}
-		}
-
-		// --- Re-render card layout on window resize ---
-		let resizeTimeout;
-
-		window.addEventListener("resize", () => {
-			clearTimeout(resizeTimeout);
-			resizeTimeout = setTimeout(() => {
-				if (tracks.length > 0) {
-					arrangement();  // ✅ recompute transforms for all cards
-				}
-			}, 200); // waits 200ms after resizing stops
-		});
-
-
-
-		showToast(`Welcome to ${app_name}!`);
-	</script>
+                    card.onclick = () => setActive(i);
+                    disableMarquee(card.querySelector(".name"));
+                    resetStyles(card);
+                }
+            });
+        }
+
+        function setActive(i) {
+            //showToast("Switching to track " + (i + 1) + " of " + tracks.length);
+            index = i;
+            loadTrack(i);
+            playTrack();
+        }
+
+        /*function loadTrack(i) {
+            const t = tracks[i];
+            audio.src = t.url;
+            audio.volume = 1 * volume.value;
+            titleEl.textContent = t.name;
+            //artistEl.textContent = `Track ${i + 1} of ${tracks.length}`;
+            //artistEl.textContent = t.metadata.artist;
+            //console.log(splitArtists(artistEl.textContent, "/"));
+            enableMarqueeGlbl(titleEl);
+            animateArtists(artistEl, splitArtists(t.metadata.artist, "/"));
+
+            // show album art if it exists			
+            if (t.cover && typeof t.cover === "string" && t.cover.startsWith("blob:")) {
+                const img = document.createElement("img");
+                img.src = t.cover;
+                coverEl.innerHTML = "";
+                coverEl.style.backgroundSize = "cover";
+                coverEl.style.backgroundPosition = "center";
+                coverEl.textContent = "";
+                coverEl.appendChild(img);
+                img.onerror = () => {
+                    coverEl.innerHTML = default_music_svg;
+                };
+            } else {
+                coverEl.style.backgroundImage = "none";
+                coverEl.textContent = "♪";
+                coverEl.textContent = t.name[0].toUpperCase();
+            }
+            renderStack();
+        }*/
+        function loadTrack(i) {
+            const t = tracks[i];
+            audio.src = t.url;
+            audio.volume = 1 * volume.value;
+            titleEl.textContent = t.name;
+            enableMarqueeGlbl(titleEl);
+
+            // 🧹 Clear previous artist animation
+            if (artistEl._artistTimers) {
+                artistEl._artistTimers.forEach(clearTimeout);
+                artistEl._artistTimers = [];
+            }
+            artistEl.textContent = "";
+
+            // 🎬 Wait one frame, then start fresh animation
+            requestAnimationFrame(() => {
+                const artists = splitArtists(t.metadata.artist, "/");
+                animateArtists(artistEl, artists);
+            });
+
+            // 🎵 Show album art if it exists			
+            if (t.cover && typeof t.cover === "string" && t.cover.startsWith("blob:")) {
+                const img = document.createElement("img");
+                img.src = t.cover;
+                coverEl.innerHTML = "";
+                coverEl.style.backgroundSize = "cover";
+                coverEl.style.backgroundPosition = "center";
+                coverEl.textContent = "";
+                coverEl.appendChild(img);
+                img.onerror = () => {
+                    coverEl.innerHTML = default_music_svg;
+                };
+            } else {
+                coverEl.style.backgroundImage = "none";
+                coverEl.textContent = "♪";
+                coverEl.textContent = t.name[0].toUpperCase();
+            }
+
+            renderStack();
+        }
+
+
+        function playTrack() {
+            audio.play();
+            playPauseBtn.innerHTML = pause_svg;
+        }
+
+        function pauseTrack() {
+            audio.pause();
+            playPauseBtn.innerHTML = play_svg;
+        }
+
+        function playPause() {
+            if (!tracks.length) return;
+            if (index === -1) {
+                index = 0;
+                renderStack();
+            }
+            audio.paused ? playTrack() : pauseTrack();
+        }
+
+        function nextTrack() {
+            if (!tracks.length) return;
+            index = (index + 1) % tracks.length;
+
+            loadTrack(index);
+            playTrack();
+        }
+
+        function prevTrack() {
+            if (!tracks.length) return;
+            index = (index - 1 + tracks.length) % tracks.length;
+            loadTrack(index);
+            playTrack();
+        }
+
+        /* EVENTS */
+
+        fileInput.onchange = e => addFiles(e.target.files);
+        document.ondrop = e => { e.preventDefault(); addFiles(e.dataTransfer.files); };
+        document.ondragover = e => e.preventDefault();
+
+        playPauseBtn.onclick = playPause;
+        nextBtn.onclick = nextTrack;
+        prevBtn.onclick = prevTrack;
+
+        audio.ontimeupdate = () => {
+            seek.value = (audio.currentTime / audio.duration) * 1000 || 0;
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+            durationEl.textContent = formatTime(audio.duration);
+        };
+        seek.oninput = () => {
+            audio.currentTime = (seek.value / 1000) * (audio.duration || 0);
+        };
+        volume.oninput = () => { audio.volume = volume.value; };
+        audio.onended = nextTrack;
+
+        /* UTILS */
+        async function extractMetadataFromAudio(file) {
+            try {
+                const buffer = await file.arrayBuffer();
+                const view = new DataView(buffer);
+
+                // Check ID3 header
+                if (
+                    String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2)) !== "ID3"
+                ) {
+                    console.log("No ID3 tag found.");
+                    return {
+                        title: file.name.replace(/\.[^/.]+$/, ""),
+                        artist: "Unknown Artist",
+                        album: "Unknown Album",
+                        genre: "",
+                        year: "",
+                        cover: null,
+                    };
+                }
+
+                let offset = 10; // Skip ID3 header
+                const tags = {};
+                let cover = null;
+
+                const decoderUTF16 = new TextDecoder("utf-16");
+                const decoderUTF8 = new TextDecoder("utf-8");
+                const decoderLatin1 = new TextDecoder("iso-8859-1");
+
+                while (offset + 10 <= buffer.byteLength) {
+                    const frameID = String.fromCharCode(
+                        view.getUint8(offset),
+                        view.getUint8(offset + 1),
+                        view.getUint8(offset + 2),
+                        view.getUint8(offset + 3)
+                    );
+                    const frameSize = view.getUint32(offset + 4);
+
+                    if (frameSize <= 0) break;
+                    offset += 10; // Skip frame header
+
+                    if (frameID === "APIC") {
+                        // Embedded cover art
+                        try {
+                            let i = offset + 1;
+                            let mime = "";
+                            while (view.getUint8(i) !== 0) mime += String.fromCharCode(view.getUint8(i++));
+                            i++; // skip null terminator
+                            i++; // skip picture type byte
+                            while (view.getUint8(i) !== 0) i++; // skip description
+                            i++;
+                            const imageData = buffer.slice(i, offset + frameSize);
+                            const blob = new Blob([imageData], { type: mime || "image/jpeg" });
+                            cover = URL.createObjectURL(blob);
+                        } catch (e) {
+                            console.warn("Failed to read cover:", e);
+                        }
+                    } else if (["TIT2", "TPE1", "TALB", "TCON", "TYER", "TDRC"].includes(frameID)) {
+                        const encodingByte = view.getUint8(offset);
+                        const textBytes = new Uint8Array(buffer, offset + 1, frameSize - 1);
+
+                        let text = "";
+                        try {
+                            if (encodingByte === 1 || encodingByte === 2)
+                                text = decoderUTF16.decode(textBytes);
+                            else if (encodingByte === 3)
+                                text = decoderUTF8.decode(textBytes);
+                            else
+                                text = decoderLatin1.decode(textBytes);
+                        } catch (e) {
+                            text = "";
+                        }
+
+                        text = text.replace(/\0/g, "").trim();
+                        tags[frameID] = text;
+                    }
+
+                    offset += frameSize;
+                }
+
+                return {
+                    title: tags["TIT2"] || file.name.replace(/\.[^/.]+$/, ""),
+                    artist: tags["TPE1"] || "Unknown Artist",
+                    album: tags["TALB"] || "Unknown Album",
+                    genre: tags["TCON"] || "",
+                    year: tags["TYER"] || tags["TDRC"] || "",
+                    cover,
+                };
+            } catch (err) {
+                console.warn("Metadata extraction failed:", err);
+                return {
+                    title: file.name.replace(/\.[^/.]+$/, ""),
+                    artist: "Unknown Artist",
+                    album: "Unknown Album",
+                    cover: null,
+                };
+            }
+
+        }
+
+        function showToast(message) {
+            // Create a container if not already present
+            let container = document.getElementById("toast-container");
+            if (!container) {
+                container = document.createElement("div");
+                container.id = "toast-container";
+                container.style.position = "fixed";
+                container.style.top = "20px";
+                container.style.left = "50%";
+                container.style.transform = "translateX(-60%)";
+                container.style.display = "flex";
+                container.style.flexDirection = "column";
+                container.style.gap = "10px";
+                container.style.zIndex = "9999";
+                container.style.pointerEvents = "none"; // clicks pass through
+                document.body.appendChild(container);
+            }
+
+            // Create the toast element
+            const toast = document.createElement("div");
+            toast.textContent = message;
+
+            // Appearance
+            toast.style.background = "var(--toast-bg)";
+            toast.style.color = "var(--text)";
+            toast.style.padding = "12px 24px";
+            toast.style.border = "2px solid var(--accent)";
+            toast.style.borderRadius = "10px";
+            toast.style.fontFamily = "Segoe UI, sans-serif";
+            toast.style.boxShadow = "0 4px 12px rgba(0,0,0,0.25)";
+            toast.style.fontWeight = "6";
+            toast.style.letterSpacing = "0.3px";
+            toast.style.opacity = "1";
+            toast.style.transform = "translateY(-80px)";
+            toast.style.transition = "all 0.5s linear";
+            toast.style.pointerEvents = "auto";
+
+            // Append to container
+            container.appendChild(toast);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.style.transform = "translateY(-5px)";
+            });
+
+            // Animate out after delay
+            setTimeout(() => {
+                toast.style.transform = "translateY(-80px)";
+                setTimeout(() => toast.remove(), 1000);
+            }, 5000);
+        }
+
+        // ===== DOT VISUALIZER =====
+        const canvas = document.getElementById("dot-visualizer");
+        const ctx = canvas.getContext("2d");
+        let audioCtx, analyser, source, dataArray, bufferLength;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = 120;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        function initVisualizer() {
+            if (audioCtx) return; // already initialized
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioCtx.createAnalyser();
+            source = audioCtx.createMediaElementSource(audio);
+            analyser.fftSize = 128;
+            bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            drawDots();
+        }
+
+        function drawDotsTypeOne() {
+            requestAnimationFrame(drawDots);
+            analyser.getByteFrequencyData(dataArray);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const dotCount = 40; // number of dots
+            const gap = canvas.width / dotCount;
+            const centerY = canvas.height / 2;
+
+            for (let i = 0; i < dotCount; i++) {
+                const value = dataArray[i * 2] || 0;
+                const radius = Math.max(4, (value / 255) * 20);
+
+                const x = i * gap + gap / 2;
+                const y = centerY; //+ Math.sin(i * 0.5 + Date.now() * 0.002) * 5;
+
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = getComputedStyle(document.body)
+                    .getPropertyValue("--accent")
+                    .trim();
+                ctx.globalAlpha = 0.8;
+                ctx.fill();
+            }
+        }
+        function drawDots() {
+            requestAnimationFrame(drawDots);
+            analyser.getByteFrequencyData(dataArray);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const totalDots = 40; // total (20 each side)
+            const half = totalDots / 2;
+            const spacing = canvas.width / totalDots;
+
+            for (let i = 0; i < totalDots; i++) {
+                const distanceFromCenter = Math.abs(i - half);
+                const mirroredIndex = Math.floor(
+                    (bufferLength / half) * distanceFromCenter
+                );
+
+                const value = dataArray[mirroredIndex] || 0;
+
+                // Center beats stronger, edges softer
+                const falloff = 1 - distanceFromCenter / half;
+                const radius = Math.max(2, (value / 255) * 15 * falloff);
+
+                const x = i * spacing;
+                const y = centerY;
+
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = getComputedStyle(document.body)
+                    .getPropertyValue("--accent")
+                    .trim();
+                ctx.globalAlpha = 0.85 * falloff;
+                ctx.fill();
+            }
+        }
+
+        let smoothed = 0;
+
+        function animateCardShadow() {
+            requestAnimationFrame(animateCardShadow);
+            if (!analyser || index === -1) return;
+
+            analyser.getByteFrequencyData(dataArray);
+
+            const activeCard = stack.children[index];
+            if (!activeCard) return;
+
+            // Split frequency ranges
+            const bass = avg(dataArray.slice(0, bufferLength * 0.2));
+            const mids = avg(dataArray.slice(bufferLength * 0.2, bufferLength * 0.6));
+            const highs = avg(dataArray.slice(bufferLength * 0.6));
+
+            // Weight them to shape the glow
+            const intensity = Math.pow((bass * 0.6 + mids * 0.3 + highs * 0.1) / 255, 2.2);
+
+            // Smooth motion
+            window._shadowSmooth = window._shadowSmooth * 0.8 + intensity * 0.2 || intensity;
+
+            const accent = getComputedStyle(document.body)
+                .getPropertyValue("--accent")
+                .trim();
+
+            const spread = 5 + window._shadowSmooth * 40; // how wide the glow is
+            const blur = 10 + window._shadowSmooth * 50;  // how soft it is
+            const alpha = 0.4 + window._shadowSmooth * 0.5;
+
+            smoothed = smoothed * 0.8 + intensity * 0.2;
+
+            const coverArt = activeCard.querySelector(".cover-image");
+            coverArt.style.scale = 1 + smoothed * 0.2;
+            coverArt.style.opacity = 0.7 + smoothed * 0.5;
+            activeCard.style.boxShadow = `0 0 ${blur}px ${spread}px ${accent}${alphaToHex(alpha)}`;
+        }
+
+        function avg(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length || 0;
+        }
+
+        // converts 0–1 alpha to hex (for rgba-less shadows)
+        function alphaToHex(a) {
+            return Math.round(a * 255).toString(16).padStart(2, '0');
+        }
+
+
+        audio.addEventListener("play", () => {
+            if (!audioCtx) initVisualizer();
+            if (audioCtx.state === "suspended") audioCtx.resume();
+            //animateCardBorder();
+            animateCardShadow();
+            //animateStackGradient();
+        });
+        audio.addEventListener("pause", () => {
+            const activeCard = stack.children[index];
+            if (activeCard) {
+                activeCard.style.border = "2px solid var(--accent)";
+                activeCard.style.boxShadow = "none";
+            }
+        });
+
+
+        function resetStyles(card) {
+            if (card) {
+                card.style.border = "2px solid var(--accent)";
+                card.style.boxShadow = "none";
+            }
+        }
+
+        // --- Re-render card layout on window resize ---
+        let resizeTimeout;
+
+        window.addEventListener("resize", () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (tracks.length > 0) {
+                    arrangement();  // ✅ recompute transforms for all cards
+                }
+            }, 200); // waits 200ms after resizing stops
+        });
+
+        function splitArtists(artists, seperator) {
+            return artists.split(seperator).map((artist) => artist.trim());
+        }
+        function animateArtistsOld(el, artists, fadeTime = 500, delay = 1200) {
+            if (!el || !artists?.length) return;
+
+            // 🧹 Stop previous timers if any
+            if (el._artistTimers) el._artistTimers.forEach(clearTimeout);
+            el._artistTimers = [];
+
+            let index = 0;
+
+            // 🪄 Ensure the element can transition opacity
+            el.style.transition = `opacity ${fadeTime}ms ease`;
+            el.style.opacity = "0";
+
+            function showNextArtist() {
+                el.style.opacity = "0"; // fade out previous (if any)
+
+                // Wait until faded out, then swap text and fade back in
+                const fadeOutTimer = setTimeout(() => {
+                    el.innerHTML = artists[index];
+                    el.style.opacity = "1"; // fade in new text
+
+                    // Schedule fade-out after delay (when name fully shown)
+                    const fadeInTimer = setTimeout(() => {
+                        el.style.opacity = "0"; // start fading out again
+                        index = (index + 1) % artists.length;
+
+                        // Schedule next name after fade-out completes
+                        const nextTimer = setTimeout(showNextArtist, fadeTime);
+                        el._artistTimers.push(nextTimer);
+                    }, delay);
+
+                    el._artistTimers.push(fadeInTimer);
+                }, fadeTime);
+
+                el._artistTimers.push(fadeOutTimer);
+            }
+
+            showNextArtist();
+        }
+
+
+        function animateArtists(el, artists, fadeTime = 1000, delay = 5000, slideDist = 25) {
+            if (!el || !artists?.length) return;
+
+            // 🧹 Stop any previous animation timers
+            if (el._artistTimers) el._artistTimers.forEach(clearTimeout);
+            el._artistTimers = [];
+
+            let index = 0;
+
+            // 🪄 Initial styling
+            el.style.opacity = "0";
+            el.style.transform = `translateX(${2*slideDist}px)`; // start from right
+            el.style.transition = `opacity ${fadeTime}ms linear, transform ${fadeTime}ms linear`;
+            el.style.display = "inline-block";
+
+            function showNextArtist() {
+                // Start fade-in + slide-in
+                el.style.opacity = "0";
+                el.style.transform = `translateX(${slideDist}px)`;
+
+                const fadeOutTimer = setTimeout(() => {
+                    el.innerHTML = artists[index];
+
+                    // Fade in & slide to neutral
+                    requestAnimationFrame(() => {
+                        el.style.opacity = "1";                        
+                        el.style.transform = `translateX(0)`;
+                    });
+                    
+                    
+                    // Hold visible, then fade-out & slide out
+                    const holdTimer = setTimeout(() => {
+                        el.style.opacity = "0";
+                        //el.style.transform = `translateX(-${slideDist*0}px)`; // slide left while fading
+                        index = (index + 1) % artists.length;
+
+                        // After fade completes, trigger next name
+                        const nextTimer = setTimeout(showNextArtist, fadeTime);
+                        el._artistTimers.push(nextTimer);
+                    }, delay);
+
+                    el._artistTimers.push(holdTimer);
+                }, fadeTime);
+
+                el._artistTimers.push(fadeOutTimer);
+            }
+
+            showNextArtist();
+        }
+
+
+        showToast(`Welcome to ${app_name}!`);
+        animateArtists(artistEl, splitArtists("Your Offline Mini HTML Player", " "));
+    </script>
 </body>
 
 </html>
