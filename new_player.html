@@ -76,6 +76,7 @@
             .cover {
                 width: 50px;
                 height: 50px;
+
             }
 
             .player .info {
@@ -125,6 +126,7 @@
             --nav-background: #ffffff;
             --nav-text-color: #1e293b;
             --toast-bg: #f8fafc;
+            --card-accent: #fff;
         }
 
 
@@ -133,11 +135,13 @@
             --panel: #1e293b;
             --muted: #94a3b8;
             --text: #f8fafc;
-            --accent: #eb7b25;
+            --accent: #F2A007;
+            /* #eb7b25;*/
             --nav-btn-background: #353535;
             --nav-background: #0f172a;
             --nav-text-color: #f8fafc;
             --toast-bg: #1e293b;
+            --card-accent: #000;
         }
 
         * {
@@ -147,7 +151,7 @@
         }
 
         body {
-            font-family: 'Arial', system-ui, sans-serif;
+            font-family: 'Segoe UI', 'Arial', system-ui, sans-serif;
             background: var(--bg);
             color: var(--text);
             height: 100vh;
@@ -260,13 +264,12 @@
             align-items: center;
             width: 100%;
             height: 100%;
-            border: 1px solid var(--accent);
             z-index: 3;
             transform-style: preserve-3d;
         }
 
         .hint-banner {
-            position: absolute;
+            position: relative;
 
             text-align: center;
             align-items: center;
@@ -283,17 +286,72 @@
             opacity: 0.5;
 
             /*transform: translateX(50%);*/
-            transition: all 1s ease;
-            border: 1px solid var(--accent);
+            /*transition: all 1s ease;*/
+            border-bottom: 2px solid transparent;
+            overflow: hidden;
             padding-bottom: 20px;
         }
+
+        /* this is your animated underline */
+        .hint-banner::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            width: 0%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .hint-banner.animate-border::after {
+            animation: border-fill 2.5s ease forwards;
+        }
+
+        @keyframes border-fill {
+            from {
+                width: 0%;
+            }
+
+            to {
+                width: 100%;
+            }
+        }
+
+        /* 🧱 Reusable border-fill animation */
+        .animated-border {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .animated-border::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            width: 0%;
+            background: var(--accent);
+            animation: border-fill 2.5s ease forwards;
+        }
+
+        @keyframes border-fill {
+            from {
+                width: 0%;
+            }
+
+            to {
+                width: 100%;
+            }
+        }
+
 
         .card {
             position: absolute;
             width: 200px;
             height: 300px;
             border-radius: var(--radius);
-            background: var(--panel);
+            background: color-mix(in srgb, var(--card-accent) 50%, transparent);
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -310,7 +368,7 @@
 
 
         .card.cover-image {
-            background-color: gray;
+            background-color: rgba(0, 0, 0, 0.5);
             height: 100px;
             width: 100px;
         }
@@ -320,6 +378,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 10px;
         }
 
         .card .name {
@@ -328,6 +387,7 @@
             margin-bottom: 4px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 5px;
+            
         }
 
         .card .size {
@@ -338,6 +398,20 @@
         .card .artist {
             font-size: 10px;
             color: var(--muted);
+            
+        }
+
+        /* info area is solid */
+        .card .info-area {
+            padding: 10px;
+            background: var(--panel);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .card.active {
@@ -369,6 +443,10 @@
             /* 🧠 allows children to shrink */
             flex: 1;
             overflow: hidden;
+            perspective: 3000px;
+            /* 🧠 required for 3D effect */
+            transform-style: preserve-3d;
+            /* 🧠 required for 3D effect */
         }
 
         .cover {
@@ -377,10 +455,13 @@
             background-color: var(--panel);
             border: 1px solid #d1d5db;
             color: var(--text);
-            border-radius: 10px;
+            border-radius: 56px;
             display: grid;
             place-items: center;
             font-weight: bold;
+            transform: rotateY(0deg);
+            transition: transform 1s linear;
+            overflow: hidden;
         }
 
         .cover img {
@@ -398,7 +479,7 @@
             overflow: hidden;
             height: 42px;
             /* keeps consistent spacing */
-            width: 50%;
+            width: 100%;
         }
 
         .player .title,
@@ -412,13 +493,14 @@
         }
 
         .player .title {
-            font-weight: 600;
+            font-weight: 450;
             font-size: 1rem;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .player .artist {
             font-size: 0.875rem;
+            font-weight: 600;
             color: var(--muted);
         }
 
@@ -1293,7 +1375,7 @@
                 //track.cover = await extractCoverFromMP3(file);
                 track.metadata = await extractMetadataFromAudio(file);
                 track.cover = track.metadata?.cover || null;
-                console.log(track.metadata);
+                //console.log(track.metadata);
                 newTracks.push(track);
             }
 
@@ -1448,6 +1530,10 @@
                         coverDiv.style.placeItems = "center";
                     }
 
+
+                    const infoDiv = document.createElement("div");
+                    infoDiv.classList.add("info-area"); // <-- new wrapper
+
                     const nameDiv = document.createElement("div");
                     nameDiv.classList.add("name", "marquee");
                     nameDiv.innerHTML = `<span>${t.name}</span>`; //t.name;
@@ -1457,14 +1543,14 @@
                     sizeDiv.textContent = t.size;
 
                     const artistDiv = document.createElement("div");
-                    sizeDiv.classList.add("artist");
-                    sizeDiv.textContent = t.metadata.artist;
-
+                    artistDiv.classList.add("artist");
+                    artistDiv.textContent = t.metadata.artist;
 
 
                     card.appendChild(coverDiv);
-                    card.appendChild(nameDiv);
-                    card.appendChild(sizeDiv);
+                    infoDiv.appendChild(nameDiv);
+                    infoDiv.appendChild(artistDiv);
+                    card.appendChild(infoDiv);
 
                     const borderReact = document.createElement("div");
                     borderReact.classList.add("border-react");
@@ -1538,36 +1624,6 @@
             playTrack();
         }
 
-        /*function loadTrack(i) {
-            const t = tracks[i];
-            audio.src = t.url;
-            audio.volume = 1 * volume.value;
-            titleEl.textContent = t.name;
-            //artistEl.textContent = `Track ${i + 1} of ${tracks.length}`;
-            //artistEl.textContent = t.metadata.artist;
-            //console.log(splitArtists(artistEl.textContent, "/"));
-            enableMarqueeGlbl(titleEl);
-            animateArtists(artistEl, splitArtists(t.metadata.artist, "/"));
-
-            // show album art if it exists			
-            if (t.cover && typeof t.cover === "string" && t.cover.startsWith("blob:")) {
-                const img = document.createElement("img");
-                img.src = t.cover;
-                coverEl.innerHTML = "";
-                coverEl.style.backgroundSize = "cover";
-                coverEl.style.backgroundPosition = "center";
-                coverEl.textContent = "";
-                coverEl.appendChild(img);
-                img.onerror = () => {
-                    coverEl.innerHTML = default_music_svg;
-                };
-            } else {
-                coverEl.style.backgroundImage = "none";
-                coverEl.textContent = "♪";
-                coverEl.textContent = t.name[0].toUpperCase();
-            }
-            renderStack();
-        }*/
         function loadTrack(i) {
             const t = tracks[i];
             audio.src = t.url;
@@ -1606,6 +1662,20 @@
                 coverEl.textContent = t.name[0].toUpperCase();
             }
 
+
+            coverEl.style.transition = "transform 0.5s ease";
+            coverEl.style.transform = "rotateY(0deg)";
+            setTimeout(() => {
+                coverEl.style.transform = "rotateY(180deg)";
+            }, 1000);
+            setTimeout(() => {
+                coverEl.style.transform = "rotateY(0deg)";
+            }, 1500);
+            setTimeout(() => {
+                coverEl.style.transform = "rotateY(25deg)";
+            }, 2000);
+
+
             renderStack();
         }
 
@@ -1613,11 +1683,13 @@
         function playTrack() {
             audio.play();
             playPauseBtn.innerHTML = pause_svg;
+            coverEl.style.transform = "rotateY(25deg)";
         }
 
         function pauseTrack() {
             audio.pause();
             playPauseBtn.innerHTML = play_svg;
+            coverEl.style.transform = "rotateY(0deg)";
         }
 
         function playPause() {
@@ -1956,9 +2028,7 @@
         audio.addEventListener("play", () => {
             if (!audioCtx) initVisualizer();
             if (audioCtx.state === "suspended") audioCtx.resume();
-            //animateCardBorder();
             animateCardShadow();
-            //animateStackGradient();
         });
         audio.addEventListener("pause", () => {
             const activeCard = stack.children[index];
@@ -2032,7 +2102,7 @@
         }
 
 
-        function animateArtists(el, artists, fadeTime = 1000, delay = 5000, slideDist = 25) {
+        function animateArtists(el, artists, fadeTime = 500, delay = 3500, slideDist = 25) {
             if (!el || !artists?.length) return;
 
             // 🧹 Stop any previous animation timers
@@ -2043,7 +2113,7 @@
 
             // 🪄 Initial styling
             el.style.opacity = "0";
-            el.style.transform = `translateX(${2*slideDist}px)`; // start from right
+            el.style.transform = `translateX(${2 * slideDist}px)`; // start from right
             el.style.transition = `opacity ${fadeTime}ms linear, transform ${fadeTime}ms linear`;
             el.style.display = "inline-block";
 
@@ -2057,11 +2127,11 @@
 
                     // Fade in & slide to neutral
                     requestAnimationFrame(() => {
-                        el.style.opacity = "1";                        
+                        el.style.opacity = "1";
                         el.style.transform = `translateX(0)`;
                     });
-                    
-                    
+
+
                     // Hold visible, then fade-out & slide out
                     const holdTimer = setTimeout(() => {
                         el.style.opacity = "0";
@@ -2081,6 +2151,60 @@
 
             showNextArtist();
         }
+        function animateHintBorder() {
+            const banner = document.querySelector('.hint-banner');
+            if (!banner) return;
+
+            banner.classList.remove('animate-border');
+            // restart the animation
+            void banner.offsetWidth; // 🧠 force reflow
+            banner.classList.add('animate-border');
+        }
+
+        function animateBorderFill(el, duration = 2500, color = "var(--accent)") {
+            if (!el) return;
+
+            // Remove previous underline (if any)
+            const existing = el.querySelector(".border-fill-effect");
+            if (existing) existing.remove();
+
+            // Ensure element has relative positioning
+            el.classList.add("animated-border");
+            if (getComputedStyle(el).position === "static") {
+                el.style.position = "relative";
+            }
+
+            // Create the animated ::after-like line
+            const border = document.createElement("div");
+            border.classList.add("border-fill-effect");
+            Object.assign(border.style, {
+                position: "absolute",
+                bottom: "0",
+                left: "0",
+                height: "2px",
+                width: "0%",
+                background: color,
+                borderRadius: "2px",
+                transition: `width ${duration}ms ease`,
+            });
+
+            el.appendChild(border);
+
+            // Trigger the animation
+            requestAnimationFrame(() => {
+                border.style.width = "100%";
+            });
+
+            // Optional: remove after animation completes
+            setTimeout(() => {
+                border.remove();
+            }, duration + 500);
+        }
+
+        animateBorderFill(document.querySelector(".hint-banner"));
+
+
+
 
 
         showToast(`Welcome to ${app_name}!`);
