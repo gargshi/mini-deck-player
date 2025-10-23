@@ -1136,9 +1136,9 @@
 
             <div class="right">
                 <div class="indicator">
-                    <div>REP <span id="rep_status">--</span></div>
-                    <div>SHFL <span id="shfl_status">--</span></div>
-                    <div>LOOP <span id="lp_status">--</span></div>
+                    <div>REP <span id="rep_status"></span></div>
+                    <div>SHFL <span id="shfl_status"></span></div>
+                    <div>LOOP <span id="lp_status"></span></div>
                 </div>
 
             </div>
@@ -1250,7 +1250,7 @@
                 }
             });
         }
-        setTheme();
+        setTheme();        
 
         function shuffleArray(array) {
             const arr = [...array];
@@ -1264,18 +1264,24 @@
         function applyShuffle() {
             if (tracks.length <= 1) return;
 
-            // Preserve current track
             const currentTrack = (index >= 0 && index < tracks.length) ? tracks[index] : tracks[0];
+            const currentIndex = index;
 
-            // Create a fully shuffled copy
-            const shuffledTracks = shuffleArray(tracks);
+            // Split into parts: before + after the current track
+            const before = tracks.slice(0, currentIndex);
+            const after = tracks.slice(currentIndex + 1);
 
-            // Find the new index of the same current track
-            const newIndex = shuffledTracks.findIndex(t => t.url === currentTrack.url);
-            if (newIndex === -1) return;
+            // Shuffle both parts independently
+            const shuffledBefore = shuffleArray(before);
+            const shuffledAfter = shuffleArray(after);
 
+            // Combine: [shuffledBefore, currentTrack, shuffledAfter]
+            const shuffledTracks = [...shuffledBefore, currentTrack, ...shuffledAfter];
+
+            // Preserve position
             tracks = [...shuffledTracks];
-            index = newIndex;
+            // currentTrack stays at the same index
+            index = currentIndex;
 
             shuffled = true;
             localStorage.setItem("shuffle", "true");
@@ -1283,9 +1289,8 @@
             showToast("Shuffle is ON");
 
             refreshStack();
-            //arrangement(); // realign layout now that index changed
+            // arrangement(); // if needed for layout updates
         }
-
         function disableShuffle() {
             if (!originalOrder.length) return;
 
@@ -1302,8 +1307,9 @@
             showToast("Shuffle is OFF");
 
             refreshStack();
-            //arrangement(); // ensure current track centers correctly
+            // arrangement();
         }
+
 
         shuffleToggle.addEventListener("change", () => {
             if (shuffleToggle.checked) {
@@ -1349,6 +1355,7 @@
             * and the shuffle is disabled.
             */
             const shuffleValue = localStorage.getItem("shuffle");
+            console.log("shuffleValue : " + shuffleValue);
             if (shuffleValue === "true") {
                 shuffleToggle.checked = true;
                 applyShuffle();
@@ -1383,7 +1390,7 @@
             const newTracks = [];
             hint.style.innerHTML = "Reading files...";
 
-            let c=0;
+            let c = 0;
 
             for (const file of files) {
                 if (!file.type.startsWith("audio/")) continue;
@@ -1422,7 +1429,7 @@
                 tracks = [...before, ...shuffledAfter];
             }
 
-            if (index === -1 && tracks.length > 0) {                
+            if (index === -1 && tracks.length > 0) {
 
                 // Start fade out
                 hint.style.opacity = '1'; // ensure it's visible
@@ -1727,7 +1734,7 @@
         }
 
         function nextTrack() {
-            if (!tracks.length) return;           
+            if (!tracks.length) return;
 
             // Handle first-time case
             if (index === -1) {
@@ -1754,7 +1761,7 @@
         }
 
         function prevTrack() {
-            if (!tracks.length) return;           
+            if (!tracks.length) return;
 
             // Handle first-time case
             if (index === -1) {
