@@ -1355,7 +1355,7 @@
             * and the shuffle is disabled.
             */
             const shuffleValue = localStorage.getItem("shuffle");
-            console.log("shuffleValue : " + shuffleValue);
+            
             if (shuffleValue === "true") {
                 shuffleToggle.checked = true;
                 applyShuffle();
@@ -1826,7 +1826,7 @@
                 if (
                     String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2)) !== "ID3"
                 ) {
-                    console.log("No ID3 tag found.");
+                    //console.log("No ID3 tag found.");
                     return {
                         title: file.name.replace(/\.[^/.]+$/, ""),
                         artist: "Unknown Artist",
