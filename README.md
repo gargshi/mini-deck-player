@@ -26,4 +26,4 @@ A simple, modern, and offline-capable HTML media player.
 
 | Version | Date | Description |
 | --- | --- | --- |
-| 1.0.0 | 2022-08-28 | Initial release |
+| 1.0.0 | 2025-10-23 | Initial release |
